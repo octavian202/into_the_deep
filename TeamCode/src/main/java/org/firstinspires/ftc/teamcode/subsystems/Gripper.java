@@ -37,6 +37,7 @@ public class Gripper extends SubsystemBase {
         isOpen = true;
     }
 
+    public void aliniat() { roll.setPosition(0.2); }
     public void turnDefault() {
         roll.setPosition(DEFAULT);
     }

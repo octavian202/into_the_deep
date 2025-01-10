@@ -6,6 +6,8 @@ import com.arcrobotics.ftclib.command.SubsystemBase;
 import com.arcrobotics.ftclib.drivebase.MecanumDrive;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.arcrobotics.ftclib.hardware.motors.MotorEx;
+import com.qualcomm.hardware.motors.NeveRest20Gearmotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Drivetrain extends SubsystemBase {
@@ -15,7 +17,7 @@ public class Drivetrain extends SubsystemBase {
 //    BasicIMU imu;
 
     public Drivetrain(HardwareMap hardwareMap) {
-        frontLeft = new MotorEx(hardwareMap, "lf");
+        frontLeft = new MotorEx(hardwareMap, "lf", Motor.GoBILDA.BARE);
         frontRight = new MotorEx(hardwareMap, "rf");
         backRight = new MotorEx(hardwareMap, "rb");
         backLeft = new MotorEx(hardwareMap, "lb");

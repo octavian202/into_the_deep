@@ -50,6 +50,8 @@ public class Main extends LinearOpMode {
                 new InstantCommand(gripper::open, gripper),
                 () -> gripper.isOpen
         ));
+        gp2.getGamepadButton(GamepadKeys.Button.B).whenHeld(new InstantCommand(gripper::aliniat, gripper));
+        gp2.getGamepadButton(GamepadKeys.Button.B).whenReleased(new InstantCommand(gripper::turnDefault, gripper));
 
         gp2.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenHeld(new InstantCommand(gripper::turnLeft, gripper));
         gp2.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenHeld(new InstantCommand(gripper::turnRight, gripper));
@@ -60,19 +62,20 @@ public class Main extends LinearOpMode {
         Arm arm = new Arm(hardwareMap);
         gp2.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(new InstantCommand(arm::outtakeSample, arm));
         gp2.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(new InstantCommand(arm::outtakeSpecimen, arm));
-        gp2.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(new InstantCommand(arm::intakeSpecimen, arm));
+        //gp2.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(new InstantCommand(arm::intakeSpecimen, arm));
         gp2.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenPressed(new InstantCommand(arm::intakeOverSubmersible));
         gp2.getGamepadButton(GamepadKeys.Button.X).whenPressed(new PickUp(arm, gripper));
 
-
         pivot.set(0);
+
+        arm.set(0.4, 1); // init pos
 
         waitForStart();
 
         while (opModeIsActive()) {
             CommandScheduler.getInstance().run();
 
-            pivot.set(gp2.getLeftY());
+            pivot.set(-gp2.getLeftY());
 
             telemetry.addData("pos", extension.getPosition());
             telemetry.addData("angle", pivot.getAngle());

@@ -42,7 +42,7 @@ public class ExtensionTest extends LinearOpMode {
 
 
         Arm arm = new Arm(hardwareMap);
-        arm.intakeSpecimen();
+        //arm.intakeSpecimen();
 
         waitForStart();
 

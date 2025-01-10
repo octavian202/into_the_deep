@@ -26,6 +26,7 @@ public class ManualExtension extends CommandBase {
     public void execute() {
         double angle = angleSupplier.get();
         double power = powerSupplier.get();
+
         if (angle <= 85 && power > 0 && extension.getPosition() >= Extension.HORIZONTAL_LIMIT) {
             power = 0;
         }

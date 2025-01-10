@@ -37,8 +37,7 @@ public class Pivot extends SubsystemBase {
             return;
         }
 
-        power = Math.min(power, 0.8);
-        power = Math.max(power, -0.8);
+        power *= 0.7;
         motor.set(power);
 
     }
