@@ -28,7 +28,7 @@ public class Arm extends SubsystemBase {
     }
 
     public void intake() {
-        arm.setPosition(0.61);
+        arm.setPosition(0.68);
         wrist.setPosition(1.0);
     }
 
@@ -38,7 +38,7 @@ public class Arm extends SubsystemBase {
     }
 
     public void outtakeSample() {
-        arm.setPosition(0.65);
+        arm.setPosition(0.75);
         wrist.setPosition(0.65);
     }
 
