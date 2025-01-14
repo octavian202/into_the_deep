@@ -14,7 +14,6 @@ public class Arm extends SubsystemBase {
         arm = hardwareMap.get(Servo.class, "arm");
         wrist = hardwareMap.get(Servo.class, "wrist");
 
-        this.init();
     }
 
     /*public void intakeSpecimen() {
@@ -22,33 +21,33 @@ public class Arm extends SubsystemBase {
         wrist.setPosition(0.95);
     }*/
 
-    public void intakeOverSubmersible() {
-        arm.setPosition(0.63);
-        wrist.setPosition(0.87);
-    }
-
-    public void intake() {
-        arm.setPosition(0.68);
-        wrist.setPosition(1.0);
-    }
-
-    public void outtakeSpecimen() {
-        arm.setPosition(0.54);
+    public void initInDimensions() {
+        arm.setPosition(1.0);
         wrist.setPosition(0.5);
     }
 
-    public void outtakeSample() {
-        arm.setPosition(0.75);
-        wrist.setPosition(0.65);
+    public void intakeOverSubmersible() {
+        arm.setPosition(0.5);
+        wrist.setPosition(0.83);
+    }
+
+    public void intakeSample() {
+        arm.setPosition(0.3);
+        wrist.setPosition(0.85);
+    }
+    public void intakeSpecimen() {
+        arm.setPosition(0.39);
+        wrist.setPosition(0.83);
+    }
+
+
+    public void outtake() {
+        arm.setPosition(0.4);
+        wrist.setPosition(0.41);
     }
 
     public void set(double armPos, double wristPos) {
         arm.setPosition(armPos);
         wrist.setPosition(wristPos);
-    }
-
-    public void init() {
-        arm.setPosition(0.95);
-        wrist.setPosition(0.5);
     }
 }

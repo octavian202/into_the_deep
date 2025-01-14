@@ -1,57 +1,53 @@
-package org.firstinspires.ftc.teamcode.auto;
+package org.firstinspires.ftc.teamcode.test;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.command.CommandScheduler;
-import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.qualcomm.hardware.lynx.LynxModule;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.commands.GoToDefaultPosition;
 import org.firstinspires.ftc.teamcode.subsystems.Arm;
 import org.firstinspires.ftc.teamcode.subsystems.Pivot;
 
 import java.util.List;
 
-@Autonomous(name = "auto", group = ".")
-public class OnlyInit extends LinearOpMode {
+@TeleOp(name = "pivot test", group = "grup")
+public class PivotTest extends LinearOpMode {
+
     @Override
     public void runOpMode() throws InterruptedException {
-
         List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
         for (LynxModule hub : allHubs) {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
 
+        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
         CommandScheduler.getInstance().reset();
 
-        Pivot pivot = new Pivot(hardwareMap);
-        pivot.setAngledStart();
-
         Arm arm = new Arm(hardwareMap);
-        arm.initInDimensions();
+        arm.intakeOverSubmersible();
 
-        GoToDefaultPosition defaultCommand = new GoToDefaultPosition(pivot, arm);
+        Pivot pivot = new Pivot(hardwareMap);
 
-        while (opModeInInit() && !isStopRequested()) {
-            CommandScheduler.getInstance().run();
-
-            telemetry.addData("target", Pivot.targetAngle);
-            telemetry.addData("angle", Pivot.angle);
-            telemetry.update();
-        }
 
         waitForStart();
 
-        defaultCommand.schedule();
-
         while (opModeIsActive()) {
-
             CommandScheduler.getInstance().run();
 
-        }
+            if (gamepad1.triangle) {
+                pivot.resetAngleVertical();
+            }
+            if (gamepad1.circle) {
+                pivot.resetAngleHorizontal();
 
+            }
+
+            telemetry.addData("angle", pivot.getAngle());
+            telemetry.addData("target", Pivot.targetAngle);
+            telemetry.update();
+        }
     }
 }

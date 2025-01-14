@@ -11,27 +11,20 @@ import java.util.function.Supplier;
 public class ManualExtension extends CommandBase {
 
     Extension extension;
-    Supplier<Double> powerSupplier, angleSupplier;
-    public static double KF = 0.05;
+    Supplier<Double> directionSupplier;
+    public static double step = 2000;
 
-    public ManualExtension(Extension extension, Supplier<Double> powerSupplier, Supplier<Double> angle) {
+    public ManualExtension(Extension extension, Supplier<Double> directionSupplier) {
         this.extension = extension;
-        this.powerSupplier = powerSupplier;
-        this.angleSupplier = angle;
+        this.directionSupplier = directionSupplier;
 
         addRequirements(extension);
     }
 
     @Override
     public void execute() {
-        double angle = angleSupplier.get();
-        double power = powerSupplier.get();
-
-        if (angle <= 85 && power > 0 && extension.getPosition() >= Extension.HORIZONTAL_LIMIT) {
-            power = 0;
-        }
-
-        extension.set(power + KF * Math.abs(Math.sin(Math.toRadians(angle))));
+        int newTarget = (int)((double)extension.getTarget() + step * directionSupplier.get());
+        extension.setTarget(newTarget);
     }
 
 }

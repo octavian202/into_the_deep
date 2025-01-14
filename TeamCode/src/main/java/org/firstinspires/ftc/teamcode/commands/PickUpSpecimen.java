@@ -7,12 +7,12 @@ import com.arcrobotics.ftclib.command.WaitCommand;
 import org.firstinspires.ftc.teamcode.subsystems.Arm;
 import org.firstinspires.ftc.teamcode.subsystems.Gripper;
 
-public class PickUp extends SequentialCommandGroup {
+public class PickUpSpecimen extends SequentialCommandGroup {
 
-    public PickUp(Arm arm, Gripper gripper) {
+    public PickUpSpecimen(Arm arm, Gripper gripper) {
         addCommands(
                 new InstantCommand(gripper::open, gripper),
-                new InstantCommand(arm::intake, arm),
+                new InstantCommand(arm::intakeSpecimen, arm),
                 new WaitCommand(400),
                 new InstantCommand(gripper::close, gripper),
                 new WaitCommand(200),
