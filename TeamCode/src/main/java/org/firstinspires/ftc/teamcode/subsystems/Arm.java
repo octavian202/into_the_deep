@@ -36,7 +36,7 @@ public class Arm extends SubsystemBase {
         wrist.setPosition(0.85);
     }
     public void intakeSpecimen() {
-        arm.setPosition(0.39);
+        arm.setPosition(0.34);
         wrist.setPosition(0.83);
     }
 
@@ -44,6 +44,11 @@ public class Arm extends SubsystemBase {
     public void outtake() {
         arm.setPosition(0.4);
         wrist.setPosition(0.41);
+    }
+
+    public void outtakeSpecimen() {
+        arm.setPosition(0.15);
+        wrist.setPosition(0.29);
     }
 
     public void set(double armPos, double wristPos) {

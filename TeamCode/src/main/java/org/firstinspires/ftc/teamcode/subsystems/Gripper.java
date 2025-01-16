@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 public class Gripper extends SubsystemBase {
 
     public static double OPEN = 0.43, CLOSED = 0.83;
-    public static double DEFAULT = 0.51, LEFT = 0.66, RIGHT = 0.36;
+    public static double DEFAULT = 0.51, LEFT = 0.85, RIGHT = 0.18;
     Servo servo, roll;
     public boolean isOpen = false;
 
@@ -35,6 +35,12 @@ public class Gripper extends SubsystemBase {
     public void open() {
         servo.setPosition(OPEN);
         isOpen = true;
+    }
+
+    public void turn(double angle) { // -90 – 90 degrees
+        double turnPercentage = (angle + 90) / 180;
+        double position = (RIGHT - LEFT) * turnPercentage + LEFT;
+        roll.setPosition(position);
     }
 
     public void aliniat() { roll.setPosition(0.2); }

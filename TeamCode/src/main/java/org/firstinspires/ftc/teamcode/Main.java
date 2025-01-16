@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.commands.DriveRobotCentric;
 import org.firstinspires.ftc.teamcode.commands.GoToDefaultPosition;
+import org.firstinspires.ftc.teamcode.commands.GripperRoll;
 import org.firstinspires.ftc.teamcode.commands.ManualExtension;
 import org.firstinspires.ftc.teamcode.commands.ManualPivot;
 import org.firstinspires.ftc.teamcode.commands.PickUpSample;
@@ -63,16 +64,13 @@ public class Main extends LinearOpMode {
         gp1.getGamepadButton(GamepadKeys.Button.X).whenHeld(new InstantCommand(gripper::aliniat, gripper));
         gp1.getGamepadButton(GamepadKeys.Button.X).whenReleased(new InstantCommand(gripper::turnDefault, gripper));
 
-        gp2.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenHeld(new InstantCommand(gripper::turnLeft, gripper));
-        gp2.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenHeld(new InstantCommand(gripper::turnRight, gripper));
-        gp2.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenReleased(new InstantCommand(gripper::turnDefault, gripper));
-        gp2.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenReleased(new InstantCommand(gripper::turnDefault, gripper));
-
+        gripper.setDefaultCommand(new GripperRoll(gripper, gp2::getLeftX));
 
         Arm arm = new Arm(hardwareMap);
         gp2.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(new InstantCommand(arm::outtake, arm));
         gp2.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(new InstantCommand(arm::outtake, arm));
         gp2.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenPressed(new InstantCommand(arm::intakeOverSubmersible));
+        gp2.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(new InstantCommand(arm::outtakeSpecimen));
         gp2.getGamepadButton(GamepadKeys.Button.X).whenPressed(new PickUpSample(arm, gripper));
         gp2.getGamepadButton(GamepadKeys.Button.A).whenPressed(new PickUpSpecimen(arm, gripper));
 //        arm.intakeOverSubmersible();
