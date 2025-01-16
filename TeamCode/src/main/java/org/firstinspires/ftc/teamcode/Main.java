@@ -84,7 +84,7 @@ public class Main extends LinearOpMode {
         while (opModeIsActive()) {
             CommandScheduler.getInstance().run();
 
-            extension.set(gp2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) - gp2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER));
+//            extension.set(gp2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) - gp2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER));
 
             telemetry.addData("pos", extension.getPosition());
             telemetry.addData("angle", pivot.getAngle());

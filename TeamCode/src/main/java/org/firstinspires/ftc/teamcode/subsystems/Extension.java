@@ -6,6 +6,8 @@ import com.arcrobotics.ftclib.controller.PIDController;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import java.nio.file.ClosedWatchServiceException;
+
 @Config
 public class Extension extends SubsystemBase {
 
@@ -51,8 +53,10 @@ public class Extension extends SubsystemBase {
         newTarget = Math.max(newTarget, LOWER_LIMIT);
         if (Pivot.targetAngle <= 40) {
             newTarget = Math.min(newTarget, HORIZONTAL_LIMIT);
+            LOWER_LIMIT = 2224;
         } else {
             newTarget = Math.min(newTarget, VERTICAL_LIMIT);
+            LOWER_LIMIT = 0;
         }
         target = newTarget;
     }
@@ -70,11 +74,12 @@ public class Extension extends SubsystemBase {
         this.setTarget(LOWER_LIMIT);
     }
 
-//    @Override
-//    public void periodic() {
-//        pidController.setPID(KP, KI, KD);
-//
-//        double output = pidController.calculate(this.getPosition(), target) + KG * Math.sin(Math.toRadians(Pivot.targetAngle));
-//        this.set(output);
-//    }
+    @Override
+    public void periodic() {
+        pidController.setPID(KP, KI, KD);
+        this.setTarget(target);
+
+        double output = pidController.calculate(this.getPosition(), target) + KG * Math.sin(Math.toRadians(Pivot.targetAngle));
+        this.set(output);
+    }
 }
