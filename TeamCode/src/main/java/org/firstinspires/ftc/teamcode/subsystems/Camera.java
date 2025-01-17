@@ -39,14 +39,9 @@ public class Camera extends SubsystemBase {
         });
     }
 
-    public void startStreaming() {
-        webcam.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT);
-        dashboard.startCameraStream(webcam, 30);
-    }
-
     public void stopStreaming() {
         webcam.stopStreaming();
-        dashboard.startCameraStream(webcam, 30);
+        dashboard.stopCameraStream();
     }
 
     public void setPipeline(OpenCvPipeline pipeline) {
@@ -55,10 +50,5 @@ public class Camera extends SubsystemBase {
 
     public OpenCvCamera getWebcam() {
         return webcam;
-    }
-
-    @Override
-    public void periodic() {
-        // Add any periodic tasks here
     }
 }

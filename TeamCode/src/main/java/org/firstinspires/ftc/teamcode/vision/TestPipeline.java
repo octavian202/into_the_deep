@@ -9,21 +9,43 @@ import org.openftc.easyopencv.OpenCvPipeline;
 
 @Config
 public class TestPipeline extends OpenCvPipeline {
-    public static double H_MIN = 0, S_MIN = 50, V_MIN = 50;
-    public static double H_MAX = 10, S_MAX = 100, V_MAX = 100;
-
-    private Mat hsv = new Mat();
-    private Mat thresholded = new Mat();
+    public static Scalar lowerBound = new Scalar(80, 50, 30);
+    public static Scalar upperBound = new Scalar(140, 255, 255);
+    public static Scalar strictLowerBound = new Scalar(100, 60, 40);
+    public static Scalar strictUpperBound = new Scalar(130, 255, 255);
 
     @Override
     public Mat processFrame(Mat input) {
+
+        Mat hsv = new Mat();
+        Mat mask = new Mat();
+        Mat stricterMask = new Mat();
+        Mat thresholded = new Mat();
+        Mat output = new Mat();
+        Mat stricterThresholded = new Mat();
+        Mat edges = new Mat();
+
         Imgproc.cvtColor(input, hsv, Imgproc.COLOR_RGB2HSV);
 
-        Scalar lowerBound = new Scalar(H_MIN, S_MIN, V_MIN);
-        Scalar upperBound = new Scalar(H_MAX, S_MAX, V_MAX);
+        Core.inRange(hsv, lowerBound, upperBound, mask);
+        Core.bitwise_and(hsv, hsv, thresholded, mask);
 
-        Core.inRange(hsv, lowerBound, upperBound, thresholded);
+        Core.inRange(thresholded, strictLowerBound, strictUpperBound, stricterMask);
+        Core.bitwise_and(thresholded, thresholded, stricterThresholded, stricterMask);
 
-        return thresholded;
+        Imgproc.Canny(stricterThresholded, edges, 100, 200);
+
+//        Imgproc.cvtColor(edges, output, Imgproc.COLOR_HSV2RGB);
+        edges.copyTo(input);
+
+        hsv.release();
+        mask.release();
+        stricterMask.release();
+        thresholded.release();
+        output.release();
+        stricterThresholded.release();
+        edges.release();
+
+        return input;
     }
 }

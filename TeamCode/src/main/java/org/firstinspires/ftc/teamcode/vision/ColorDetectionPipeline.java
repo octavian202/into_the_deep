@@ -19,9 +19,9 @@ public class ColorDetectionPipeline extends OpenCvPipeline {
     public Mat processFrame(Mat input) {
         Imgproc.cvtColor(input, hsv, Imgproc.COLOR_RGB2HSV);
 
-        Scalar blueLower = new Scalar(220, 50, 50);
-        Scalar blueUpper = new Scalar(240, 100, 100);
-        Scalar yellowLower = new Scalar(50, 50, 50);
+        Scalar blueLower = new Scalar(80, 50, 30);
+        Scalar blueUpper = new Scalar(140, 255, 255);
+        Scalar yellowLower = new Scalar(50, 255, 255);
         Scalar yellowUpper = new Scalar(60, 100, 100);
         Scalar redLower = new Scalar(0, 50, 50);
         Scalar redUpper = new Scalar(10, 100, 100);
