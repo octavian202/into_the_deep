@@ -12,9 +12,9 @@ import java.nio.file.ClosedWatchServiceException;
 public class Extension extends SubsystemBase {
 
 
-    public final int LOW_BASKET = 17500, HIGH_BASKET = 47500, HIGH_RUNG = 10000;
+    public static final int HIGH_BASKET = 47000, HIGH_RUNG = 4000;
     public static double KP = 0.0006, KI = 0, KD = 0.00001, KG = 0.09;
-    public static int HORIZONTAL_LIMIT = 25000, VERTICAL_LIMIT = 50000, LOWER_LIMIT = 0;
+    public static int HORIZONTAL_LIMIT = 18000, LOWER_LIMIT = 0;
     Motor left, right;
     Motor.Encoder encoder;
     PIDController pidController;
@@ -30,7 +30,7 @@ public class Extension extends SubsystemBase {
         left.setInverted(true);
 
         encoder = right.encoder;
-        encoder.reset();
+//        encoder.reset();
 
         pidController = new PIDController(KP, KI, KD);
         pidController.setTolerance(400);
@@ -55,7 +55,7 @@ public class Extension extends SubsystemBase {
             newTarget = Math.min(newTarget, HORIZONTAL_LIMIT);
             LOWER_LIMIT = 2224;
         } else {
-            newTarget = Math.min(newTarget, VERTICAL_LIMIT);
+            newTarget = Math.min(newTarget, HIGH_BASKET);
             LOWER_LIMIT = 0;
         }
         target = newTarget;
@@ -72,6 +72,10 @@ public class Extension extends SubsystemBase {
     }
     public void goDown() {
         this.setTarget(LOWER_LIMIT);
+    }
+
+    public boolean isBusy() {
+        return (Math.abs(getPosition() - target) <= 400);
     }
 
     @Override

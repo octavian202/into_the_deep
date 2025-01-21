@@ -63,15 +63,15 @@ public class Pivot extends SubsystemBase {
         angle = STARTING_ANGLE - ANGLE_IN_TICK * encoder.getPosition();
 
         double output = pidController.calculate(angle, targetAngle);
-        if (this.getAngle() >= 10) {
-            output += KF * Math.cos(Math.toRadians(angle));
+        if (this.getAngle() >= 85) {
+            output += 0.1;
         }
         this.set(output);
 
     }
 
     public void goDown() {
-        targetAngle = 0;
+        targetAngle = 5;
     }
     public void goUp() {
         targetAngle = 95;

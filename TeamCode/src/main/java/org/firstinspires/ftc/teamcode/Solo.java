@@ -5,13 +5,16 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.command.CommandScheduler;
 import com.arcrobotics.ftclib.command.ConditionalCommand;
 import com.arcrobotics.ftclib.command.InstantCommand;
+import com.arcrobotics.ftclib.command.button.Trigger;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.commands.AutoArmControl;
 import org.firstinspires.ftc.teamcode.commands.DriveRobotCentric;
+import org.firstinspires.ftc.teamcode.commands.GripperRoll;
 import org.firstinspires.ftc.teamcode.commands.ManualExtension;
 import org.firstinspires.ftc.teamcode.commands.ManualPivot;
 import org.firstinspires.ftc.teamcode.commands.PickUpSample;
@@ -64,24 +67,27 @@ public class Solo extends LinearOpMode {
                 new InstantCommand(gripper::open, gripper),
                 () -> gripper.isOpen
         ));
-//        gp1.getGamepadButton(GamepadKeys.Button.X).whenHeld(new InstantCommand(gripper::aliniat, gripper));
-//        gp1.getGamepadButton(GamepadKeys.Button.X).whenReleased(new InstantCommand(gripper::turnDefault, gripper));
-//
-//        gp2.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenHeld(new InstantCommand(gripper::turnLeft, gripper));
-//        gp2.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenHeld(new InstantCommand(gripper::turnRight, gripper));
-//        gp2.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenReleased(new InstantCommand(gripper::turnDefault, gripper));
-//        gp2.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenReleased(new InstantCommand(gripper::turnDefault, gripper));
-
 
         Arm arm = new Arm(hardwareMap);
-        gp.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(new InstantCommand(arm::outtake, arm));
-        gp.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(new InstantCommand(arm::outtake, arm));
-        gp.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenPressed(new InstantCommand(arm::intakeOverSubmersible));
-        gp.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(new InstantCommand(arm::outtakeSpecimen));
-        gp.getGamepadButton(GamepadKeys.Button.X).whenPressed(new PickUpSample(arm, gripper));
-        gp.getGamepadButton(GamepadKeys.Button.A).whenPressed(new PickUpSpecimen(arm, gripper));
+        Trigger pivotIsUp = new Trigger(() -> pivot.getAngle() >= 45);
+        Trigger pivotIsDown = new Trigger(() -> pivot.getAngle() < 45);
 
-        arm.outtake();
+        pivotIsUp.whenActive(new AutoArmControl(arm, extension));
+
+        pivotIsDown.whenActive(new InstantCommand(() -> gripper.turn(0), gripper));
+        pivotIsDown.whenActive(new InstantCommand(arm::intakeSpecimen, arm));
+
+        gp.getGamepadButton(GamepadKeys.Button.DPAD_UP).and(pivotIsDown).whenActive(new InstantCommand(arm::intakeSpecimen, arm));
+        gp.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).and(pivotIsDown).whenActive(new InstantCommand(arm::intakeOverSubmersible));
+        gp.getGamepadButton(GamepadKeys.Button.X).and(pivotIsDown).whenActive(new PickUpSample(arm, gripper));
+
+//        gp.getGamepadButton(GamepadKeys.Button.RIGHT_STICK_BUTTON).whenReleased(new InstantCommand(gripper::aliniat, gripper));
+//        gp.getGamepadButton(GamepadKeys.Button.RIGHT_STICK_BUTTON).whenPressed(new InstantCommand(gripper::turnDefault, gripper));
+
+
+//        arm.outtake();
+
+//        (new AutoArmControl(arm, extension)).schedule();
 
         waitForStart();
 

@@ -13,7 +13,7 @@ public class GoToDefaultPosition extends SequentialCommandGroup {
         addCommands(
                 new WaitCommand(1000),
                 new InstantCommand(pivot::goUp),
-                new InstantCommand(arm::outtake),
+                new InstantCommand(arm::outtakeSample),
                 new WaitCommand(1000),
                 new InstantCommand(pivot::resetAngleVertical)
         );

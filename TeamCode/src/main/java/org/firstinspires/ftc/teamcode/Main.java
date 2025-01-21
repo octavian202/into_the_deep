@@ -3,12 +3,14 @@ package org.firstinspires.ftc.teamcode;
 import com.arcrobotics.ftclib.command.CommandScheduler;
 import com.arcrobotics.ftclib.command.ConditionalCommand;
 import com.arcrobotics.ftclib.command.InstantCommand;
+import com.arcrobotics.ftclib.command.button.Trigger;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.commands.AutoArmControl;
 import org.firstinspires.ftc.teamcode.commands.DriveRobotCentric;
 import org.firstinspires.ftc.teamcode.commands.GoToDefaultPosition;
 import org.firstinspires.ftc.teamcode.commands.GripperRoll;
@@ -53,7 +55,11 @@ public class Main extends LinearOpMode {
         ));
         pivot.setDefaultCommand(new ManualPivot(pivot, gp2::getRightY));
 
-        Extension extension = new Extension(hardwareMap);extension.setDefaultCommand(new ManualExtension(extension, () -> gp2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) - gp2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER)));
+        Extension extension = new Extension(hardwareMap);
+        extension.setDefaultCommand(new ManualExtension(extension, () -> gp2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) - gp2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER)));
+        gp2.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenPressed(new InstantCommand(extension::goHighBasket));
+        gp2.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenPressed(new InstantCommand(extension::goHighRung, extension));
+
 
         Gripper gripper = new Gripper(hardwareMap);
         gp2.getGamepadButton(GamepadKeys.Button.Y).whenPressed(new ConditionalCommand(
@@ -67,22 +73,26 @@ public class Main extends LinearOpMode {
         gripper.setDefaultCommand(new GripperRoll(gripper, gp2::getLeftX));
 
         Arm arm = new Arm(hardwareMap);
-        gp2.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(new InstantCommand(arm::outtake, arm));
-        gp2.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(new InstantCommand(arm::outtake, arm));
-        gp2.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenPressed(new InstantCommand(arm::intakeOverSubmersible));
-        gp2.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(new InstantCommand(arm::outtakeSpecimen));
-        gp2.getGamepadButton(GamepadKeys.Button.X).whenPressed(new PickUpSample(arm, gripper));
-        gp2.getGamepadButton(GamepadKeys.Button.A).whenPressed(new PickUpSpecimen(arm, gripper));
-//        arm.intakeOverSubmersible();
+        Trigger pivotIsUp = new Trigger(() -> pivot.getAngle() >= 45);
+        Trigger pivotIsDown = new Trigger(() -> pivot.getAngle() < 45);
 
-        arm.outtake();
+        pivotIsUp.whenActive(new AutoArmControl(arm, extension));
+
+        pivotIsDown.whenActive(new InstantCommand(() -> gripper.turn(0), gripper));
+        pivotIsDown.whenActive(new InstantCommand(arm::intakeSpecimen, arm));
+
+        gp2.getGamepadButton(GamepadKeys.Button.DPAD_UP).and(pivotIsDown).whenActive(new InstantCommand(arm::intakeSpecimen, arm));
+        gp2.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).and(pivotIsDown).whenActive(new InstantCommand(arm::intakeOverSubmersible));
+        gp2.getGamepadButton(GamepadKeys.Button.X).and(pivotIsDown).whenActive(new PickUpSample(arm, gripper));
+
+//        gp.getGamepadButton(GamepadKeys.Button.RIGHT_STICK_BUTTON).whenReleased(new InstantCommand(gripper::aliniat, gripper));
+//        gp.getGamepadButton(GamepadKeys.Button.RIGHT_STICK_BUTTON).whenPressed(new InstantCommand(gripper::turnDefault, gripper));
+
 
         waitForStart();
 
         while (opModeIsActive()) {
             CommandScheduler.getInstance().run();
-
-//            extension.set(gp2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) - gp2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER));
 
             telemetry.addData("pos", extension.getPosition());
             telemetry.addData("angle", pivot.getAngle());
