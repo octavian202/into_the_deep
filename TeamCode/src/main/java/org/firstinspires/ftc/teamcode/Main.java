@@ -63,20 +63,23 @@ public class Main extends LinearOpMode {
 
         Gripper gripper = new Gripper(hardwareMap);
         gp2.getGamepadButton(GamepadKeys.Button.Y).whenPressed(new ConditionalCommand(
-                new InstantCommand(gripper::close, gripper),
-                new InstantCommand(gripper::open, gripper),
+                new InstantCommand(gripper::close),
+                new InstantCommand(gripper::open),
                 () -> gripper.isOpen
         ));
-        gp1.getGamepadButton(GamepadKeys.Button.X).whenHeld(new InstantCommand(gripper::aliniat, gripper));
-        gp1.getGamepadButton(GamepadKeys.Button.X).whenReleased(new InstantCommand(gripper::turnDefault, gripper));
+//        gp1.getGamepadButton(GamepadKeys.Button.X).whenHeld(new InstantCommand(gripper::aliniat, gripper));
+//        gp1.getGamepadButton(GamepadKeys.Button.X).whenReleased(new InstantCommand(gripper::turnDefault, gripper));
 
-        gripper.setDefaultCommand(new GripperRoll(gripper, gp2::getLeftX));
+//        gripper.setDefaultCommand(new GripperRoll(gripper, gp2::getLeftX));
+
 
         Arm arm = new Arm(hardwareMap);
         Trigger pivotIsUp = new Trigger(() -> pivot.getAngle() >= 45);
         Trigger pivotIsDown = new Trigger(() -> pivot.getAngle() < 45);
 
-        pivotIsUp.whenActive(new AutoArmControl(arm, extension));
+        pivotIsDown.whenActive(new GripperRoll(gripper, gp2::getLeftX));
+
+        pivotIsUp.whenActive(new AutoArmControl(arm, gripper, extension));
 
         pivotIsDown.whenActive(new InstantCommand(() -> gripper.turn(0), gripper));
         pivotIsDown.whenActive(new InstantCommand(arm::intakeSpecimen, arm));
@@ -88,6 +91,7 @@ public class Main extends LinearOpMode {
 //        gp.getGamepadButton(GamepadKeys.Button.RIGHT_STICK_BUTTON).whenReleased(new InstantCommand(gripper::aliniat, gripper));
 //        gp.getGamepadButton(GamepadKeys.Button.RIGHT_STICK_BUTTON).whenPressed(new InstantCommand(gripper::turnDefault, gripper));
 
+        (new AutoArmControl(arm, gripper, extension)).schedule();
 
         waitForStart();
 

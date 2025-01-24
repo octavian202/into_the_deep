@@ -8,18 +8,18 @@ import com.qualcomm.robotcore.hardware.Servo;
 @Config
 public class Gripper extends SubsystemBase {
 
-    public static double OPEN = 0.43, CLOSED = 0.87;
-    public static double DEFAULT = 0.51, LEFT = 0.85, RIGHT = 0.18;
+    public static double OPEN = 0.54, CLOSED = 0.91;
+    public static double LEFT = 1.02, RIGHT = 0.38;
+            ;
     Servo servo, roll;
     public boolean isOpen = false;
 
     public Gripper(HardwareMap hardwareMap) {
         servo = hardwareMap.get(Servo.class, "gripper");
         roll = hardwareMap.get(Servo.class, "roll");
-//        this.close();
 
         this.close();
-        this.turnDefault();
+//        this.turn(0);
     }
 
     public void set(double gripperPos, double rollPos) {
@@ -43,10 +43,7 @@ public class Gripper extends SubsystemBase {
         roll.setPosition(position);
     }
 
-    public void aliniat() { roll.setPosition(0.2); }
-    public void turnDefault() {
-        roll.setPosition(DEFAULT);
-    }
+    public void aliniat() { turn(90); }
     public void turnLeft() {
         roll.setPosition(LEFT);
     }

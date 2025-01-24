@@ -13,13 +13,13 @@ public class PickUpSample extends SequentialCommandGroup {
         addCommands(
                 new InstantCommand(gripper::open, gripper),
                 new InstantCommand(arm::intakeSample, arm),
-                new WaitCommand(400),
+                new WaitCommand(200),
                 new InstantCommand(gripper::close, gripper),
                 new WaitCommand(200),
                 new InstantCommand(arm::intakeOverSubmersible, arm)
         );
 
-        addRequirements(arm, gripper);
+//        addRequirements(arm, gripper);
     }
 
 }

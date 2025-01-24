@@ -9,16 +9,15 @@ import org.firstinspires.ftc.teamcode.subsystems.Pivot;
 
 public class GoToDefaultPosition extends SequentialCommandGroup {
 
-    public GoToDefaultPosition(Pivot pivot, Arm arm) {
+    public GoToDefaultPosition(Pivot pivot) {
         addCommands(
-                new WaitCommand(1000),
+                new WaitCommand(100),
                 new InstantCommand(pivot::goUp),
-                new InstantCommand(arm::outtakeSample),
-                new WaitCommand(1000),
+                new WaitCommand(700),
                 new InstantCommand(pivot::resetAngleVertical)
         );
 
-        addRequirements(pivot, arm);
+        addRequirements(pivot);
     }
 
 }

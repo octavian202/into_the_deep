@@ -12,7 +12,7 @@ import java.nio.file.ClosedWatchServiceException;
 public class Extension extends SubsystemBase {
 
 
-    public static final int HIGH_BASKET = 47000, HIGH_RUNG = 4000;
+    public static final int HIGH_BASKET = 47000, HIGH_RUNG = 17000;
     public static double KP = 0.0006, KI = 0, KD = 0.00001, KG = 0.09;
     public static int HORIZONTAL_LIMIT = 18000, LOWER_LIMIT = 0;
     Motor left, right;
@@ -50,7 +50,6 @@ public class Extension extends SubsystemBase {
     }
 
     public void setTarget(int newTarget) {
-        newTarget = Math.max(newTarget, LOWER_LIMIT);
         if (Pivot.targetAngle <= 40) {
             newTarget = Math.min(newTarget, HORIZONTAL_LIMIT);
             LOWER_LIMIT = 2224;
@@ -58,6 +57,7 @@ public class Extension extends SubsystemBase {
             newTarget = Math.min(newTarget, HIGH_BASKET);
             LOWER_LIMIT = 0;
         }
+        newTarget = Math.max(newTarget, LOWER_LIMIT);
         target = newTarget;
     }
 
@@ -75,7 +75,7 @@ public class Extension extends SubsystemBase {
     }
 
     public boolean isBusy() {
-        return (Math.abs(getPosition() - target) <= 400);
+        return (Math.abs(getPosition() - getTarget()) > 400);
     }
 
     @Override

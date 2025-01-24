@@ -72,7 +72,7 @@ public class Solo extends LinearOpMode {
         Trigger pivotIsUp = new Trigger(() -> pivot.getAngle() >= 45);
         Trigger pivotIsDown = new Trigger(() -> pivot.getAngle() < 45);
 
-        pivotIsUp.whenActive(new AutoArmControl(arm, extension));
+        pivotIsUp.whenActive(new AutoArmControl(arm, gripper, extension));
 
         pivotIsDown.whenActive(new InstantCommand(() -> gripper.turn(0), gripper));
         pivotIsDown.whenActive(new InstantCommand(arm::intakeSpecimen, arm));
@@ -87,7 +87,7 @@ public class Solo extends LinearOpMode {
 
 //        arm.outtake();
 
-//        (new AutoArmControl(arm, extension)).schedule();
+        (new AutoArmControl(arm, gripper, extension)).schedule();
 
         waitForStart();
 

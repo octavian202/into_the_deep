@@ -33,7 +33,7 @@ public class OnlyInit extends LinearOpMode {
         Arm arm = new Arm(hardwareMap);
         arm.initInDimensions();
 
-        GoToDefaultPosition defaultCommand = new GoToDefaultPosition(pivot, arm);
+        GoToDefaultPosition defaultCommand = new GoToDefaultPosition(pivot);
 
         while (opModeInInit() && !isStopRequested()) {
             CommandScheduler.getInstance().run();
