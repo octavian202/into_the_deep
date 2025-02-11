@@ -4,11 +4,13 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.command.CommandScheduler;
+import com.arcrobotics.ftclib.controller.PIDController;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.commands.ManualPivot;
 import org.firstinspires.ftc.teamcode.subsystems.Arm;
@@ -20,7 +22,12 @@ import java.util.List;
 @Config
 @TeleOp(name = "test extensie", group = "test")
 public class ExtensionTest extends LinearOpMode {
-    public static int target = 0;
+
+    public static double KP = 0.00006, KI = 0d, KD = 0d, KG = 0d;
+    public static int TARGET = 0;
+    Motor left, right, ascend;
+    Motor.Encoder encoder;
+
     @Override
     public void runOpMode() throws InterruptedException {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
@@ -31,26 +38,42 @@ public class ExtensionTest extends LinearOpMode {
 
         CommandScheduler.getInstance().reset();
 
-        GamepadEx gp2 = new GamepadEx(gamepad2);
+        left = new Motor(hardwareMap, "est");
+        right = new Motor(hardwareMap, "edr");
+        ascend = new Motor(hardwareMap, "ascend");
 
-        Pivot pivot = new Pivot(hardwareMap);
-        pivot.setDefaultCommand(new ManualPivot(pivot, gp2::getLeftY));
+        left.setRunMode(Motor.RunMode.RawPower);
+        right.setRunMode(Motor.RunMode.RawPower);
+        ascend.setRunMode(Motor.RunMode.RawPower);
 
-        Arm arm = new Arm(hardwareMap);
-        arm.intakeSample();
+        left.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        right.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        ascend.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
 
-        Extension extension = new Extension(hardwareMap);
+        left.set(0d);
+        right.set(0d);
+        ascend.set(0d);
+
+        left.setInverted(true);
+
+        encoder = right.encoder;
+        encoder.reset();
+
+        PIDController pidController = new PIDController(KP, KI, KD);
 
         waitForStart();
 
         while (opModeIsActive()) {
-            extension.setTarget(target);
-            CommandScheduler.getInstance().run();
+            pidController.setPID(KP, KI, KD);
 
-            telemetry.addData("position", extension.getPosition());
-            telemetry.addData("target", extension.getTarget());
+            double output = pidController.calculate(encoder.getPosition(), TARGET) + KG * Math.sin(Math.toRadians(95));
+            left.set(output);
+            right.set(output);
+
+            telemetry.addData("position", encoder.getPosition());
+            telemetry.addData("target", TARGET);
+            telemetry.addData("power", output);
             telemetry.update();
-
         }
     }
 }

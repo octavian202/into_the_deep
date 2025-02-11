@@ -23,7 +23,12 @@ public class Arm extends SubsystemBase {
     }
 
     public void intakeOverSubmersible() {
-        arm.setPosition(0.3);
+        arm.setPosition(0.31);
+        wrist.setPosition(0.97);
+    }
+
+    public void intakeAuto() {
+        arm.setPosition(0.32);
         wrist.setPosition(0.97);
     }
 
@@ -36,11 +41,6 @@ public class Arm extends SubsystemBase {
         wrist.setPosition(0.85);
     }
 
-    public void idle() {
-        arm.setPosition(0.37);
-        wrist.setPosition(0.65);
-    }
-
 
     public void outtakeSample() {
         arm.setPosition(0.26);
@@ -48,8 +48,13 @@ public class Arm extends SubsystemBase {
     }
 
     public void outtakeSpecimen() {
-        arm.setPosition(0.15);
-        wrist.setPosition(0.35);
+        arm.setPosition(0.7);
+        wrist.setPosition(0.85);
+    }
+
+    public void idle() {
+        arm.setPosition(0.2);
+        wrist.setPosition(0.85);
     }
 
     public void set(double armPos, double wristPos) {

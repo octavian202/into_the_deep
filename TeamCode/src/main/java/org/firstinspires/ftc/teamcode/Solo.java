@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.command.CommandScheduler;
 import com.arcrobotics.ftclib.command.ConditionalCommand;
 import com.arcrobotics.ftclib.command.InstantCommand;
@@ -12,13 +10,10 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.commands.AutoArmControl;
 import org.firstinspires.ftc.teamcode.commands.DriveRobotCentric;
 import org.firstinspires.ftc.teamcode.commands.GripperRoll;
-import org.firstinspires.ftc.teamcode.commands.ManualExtension;
 import org.firstinspires.ftc.teamcode.commands.ManualPivot;
 import org.firstinspires.ftc.teamcode.commands.PickUpSample;
-import org.firstinspires.ftc.teamcode.commands.PickUpSpecimen;
 import org.firstinspires.ftc.teamcode.subsystems.Arm;
 import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
 import org.firstinspires.ftc.teamcode.subsystems.Extension;
@@ -26,68 +21,84 @@ import org.firstinspires.ftc.teamcode.subsystems.Gripper;
 import org.firstinspires.ftc.teamcode.subsystems.Pivot;
 
 import java.util.List;
+import java.util.function.Supplier;
 
-
-@TeleOp(name = "solo")
+@TeleOp(name = "solo", group = ".")
 public class Solo extends LinearOpMode {
+
     @Override
     public void runOpMode() throws InterruptedException {
         List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
         for (LynxModule hub : allHubs) {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
-
-        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-
         CommandScheduler.getInstance().reset();
 
         GamepadEx gp = new GamepadEx(gamepad1);
 
         Drivetrain drivetrain = new Drivetrain(hardwareMap);
+        Pivot pivot = new Pivot(hardwareMap);
+        Extension extension = new Extension(hardwareMap);
+        Gripper gripper = new Gripper(hardwareMap);
+        Arm arm = new Arm(hardwareMap);
+
+        Trigger pivotIsUp = new Trigger(() -> pivot.getAngle() >= 45);
+        Trigger pivotIsDown = new Trigger(() -> pivot.getAngle() < 45);
+        Trigger extended = new Trigger(() -> extension.getTarget() >= 10000 && !extension.isBusy());
+        Trigger retracted = new Trigger(() -> extension.getTarget() < 10000 && !extension.isBusy());
+
+
         drivetrain.setDefaultCommand(new DriveRobotCentric(drivetrain, gp::getLeftX, gp::getLeftY, gp::getRightX));
 
-        Pivot pivot = new Pivot(hardwareMap);
-        gp.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenPressed(pivot::resetAngleVertical);
-        gp.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenPressed(pivot::resetAngleHorizontal);
         pivot.resetAngleVertical();
 
-        gp.getGamepadButton(GamepadKeys.Button.B).whenPressed(new ConditionalCommand(
+        gp.getGamepadButton(GamepadKeys.Button.B).and(new Trigger(() -> extension.getPosition() <= 10000)).whenActive(new ConditionalCommand(
                 new InstantCommand(pivot::goDown, pivot),
                 new InstantCommand(pivot::goUp, pivot),
                 () -> pivot.getAngle() >= 45
         ));
-        pivot.setDefaultCommand(new ManualPivot(pivot, () -> gp.getRightY() < 0.3 || gp.getRightY() > 0.3 ? gp.getRightY() : 0d));
+        Supplier<Double> pivotControl = () -> {
+            if (Math.abs(gp.getRightY()) > 0.6) {
+                return -gp.getRightY();
+            }
+            return 0d;
+        };
+        pivot.setDefaultCommand(new ManualPivot(pivot, pivotControl));
 
-        Extension extension = new Extension(hardwareMap);
-        extension.setDefaultCommand(new ManualExtension(extension, () -> gp.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) - gp.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER)));
-
-        Gripper gripper = new Gripper(hardwareMap);
         gp.getGamepadButton(GamepadKeys.Button.Y).whenPressed(new ConditionalCommand(
-                new InstantCommand(gripper::close, gripper),
-                new InstantCommand(gripper::open, gripper),
+                new InstantCommand(gripper::close),
+                new InstantCommand(gripper::open),
                 () -> gripper.isOpen
         ));
 
-        Arm arm = new Arm(hardwareMap);
-        Trigger pivotIsUp = new Trigger(() -> pivot.getAngle() >= 45);
-        Trigger pivotIsDown = new Trigger(() -> pivot.getAngle() < 45);
 
-        pivotIsUp.whenActive(new AutoArmControl(arm, gripper, extension));
+        gp.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenPressed(new ConditionalCommand(
+                new InstantCommand(extension::goHighBasket),
+                new ConditionalCommand(
+                        new InstantCommand(extension::goDown),
+                        new InstantCommand(extension::goHighChamber),
+                        pivotIsDown::get
+                ),
+                () -> extension.getPosition() <= 10000
+        ));
 
-        pivotIsDown.whenActive(new InstantCommand(() -> gripper.turn(0), gripper));
-        pivotIsDown.whenActive(new InstantCommand(arm::intakeSpecimen, arm));
-
-        gp.getGamepadButton(GamepadKeys.Button.DPAD_UP).and(pivotIsDown).whenActive(new InstantCommand(arm::intakeSpecimen, arm));
-        gp.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).and(pivotIsDown).whenActive(new InstantCommand(arm::intakeOverSubmersible));
         gp.getGamepadButton(GamepadKeys.Button.X).and(pivotIsDown).whenActive(new PickUpSample(arm, gripper));
 
-//        gp.getGamepadButton(GamepadKeys.Button.RIGHT_STICK_BUTTON).whenReleased(new InstantCommand(gripper::aliniat, gripper));
-//        gp.getGamepadButton(GamepadKeys.Button.RIGHT_STICK_BUTTON).whenPressed(new InstantCommand(gripper::turnDefault, gripper));
+        pivotIsUp.whenActive(extension::goHighChamber);
+        pivotIsDown.whenActive(extension::goDown);
+        pivotIsDown.whenActive(new GripperRoll(gripper, () -> gp.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) - gp.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER)));
 
+        pivotIsUp.and(extended).whenActive(arm::outtakeSample);
+        pivotIsUp.and(extended).whenActive(() -> gripper.turn(90));
+        pivotIsUp.and(new Trigger(() -> extension.isBusy() && extension.getPosition() >= 10000)).whenActive(arm::idle);
 
-//        arm.outtake();
+        pivotIsUp.and(retracted).whenActive(arm::outtakeSpecimen);
+        pivotIsUp.and(retracted).whenActive(() -> gripper.turn(180));
 
-        (new AutoArmControl(arm, gripper, extension)).schedule();
+        pivotIsDown.and(extended).whenActive(arm::intakeOverSubmersible);
+        pivotIsDown.and(extended).whenActive(gripper::open);
+
+        pivotIsDown.and(new Trigger(() -> extension.getTarget() <= 10000)).whenActive(arm::intakeSpecimen);
 
         waitForStart();
 

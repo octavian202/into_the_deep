@@ -3,15 +3,22 @@ package org.firstinspires.ftc.teamcode.test;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.command.CommandScheduler;
-import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.qualcomm.hardware.lynx.LynxModule;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.vision.Camera;
+import org.firstinspires.ftc.vision.opencv.ColorBlobLocatorProcessor;
+import org.opencv.core.RotatedRect;
+
 import java.util.List;
 
-@TeleOp(name = "pivot encoder", group = "test")
-public class PivotEncoder extends LinearOpMode {
+@TeleOp(name = "camera test", group = "test")
+public class CameraTest extends LinearOpMode {
+
+    List<ColorBlobLocatorProcessor.Blob> blobs;
+
     @Override
     public void runOpMode() throws InterruptedException {
         List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
@@ -21,20 +28,25 @@ public class PivotEncoder extends LinearOpMode {
 
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
-        CommandScheduler.getInstance().reset();
+        Camera camera = new Camera(hardwareMap, "blue");
 
-        Motor motor = new Motor(hardwareMap, "pivot");
-        Motor.Encoder encoder = motor.encoder;
+        CommandScheduler.getInstance().reset();
 
         waitForStart();
 
         while (opModeIsActive()) {
 
-            if (gamepad1.triangle) {
-                encoder.reset();
+            CommandScheduler.getInstance().run();
+
+            blobs = camera.getBlobs();
+
+            for (ColorBlobLocatorProcessor.Blob b : blobs) {
+                RotatedRect boxFit = b.getBoxFit();
+
+                telemetry.addLine(String.format("%5d  %4.2f   %5.2f  (%3d,%3d)",
+                        b.getContourArea(), b.getDensity(), b.getAspectRatio(), (int) boxFit.center.x, (int) boxFit.center.y));
             }
 
-            telemetry.addData("pos", encoder.getPosition());
             telemetry.update();
         }
     }
