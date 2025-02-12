@@ -28,12 +28,12 @@ public class Arm extends SubsystemBase {
     }
 
     public void intakeAuto() {
-        arm.setPosition(0.32);
+        arm.setPosition(0.34);
         wrist.setPosition(0.97);
     }
 
     public void intakeSample() {
-        arm.setPosition(0.2);
+        arm.setPosition(0.26);
         wrist.setPosition(0.97);
     }
     public void intakeSpecimen() {

@@ -13,7 +13,7 @@ public class Extension extends SubsystemBase {
 
 
     public static final int HIGH_BASKET = 47000, HIGH_CHAMBER = 7000;
-    public static double KP = 0.0007, KI = 0, KD = 0.00002, KG = 0.16;
+    public static double KP = 0.0005, KI = 0, KD = 0.000015, KG = 0.16;
     public static double ASCEND_KP = 0.002;
     public static int HORIZONTAL_LIMIT = 18000, LOWER_LIMIT = 0;
     Motor left, right, ascend;
@@ -117,7 +117,7 @@ public class Extension extends SubsystemBase {
     }
 
     public boolean isBusy() {
-        return (Math.abs(getPosition() - getTarget()) > 1000);
+        return (Math.abs(getPosition() - getTarget()) > 1300);
     }
 
     @Override

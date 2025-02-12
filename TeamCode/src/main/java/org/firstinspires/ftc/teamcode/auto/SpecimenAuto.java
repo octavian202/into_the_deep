@@ -27,7 +27,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Pivot;
 import java.util.List;
 //import pedroPathing.constants.LConstants;
 
-@Autonomous(name = "3 specimen auto", group = ".")
+@Autonomous(name = "specimen auto", group = ".")
 public class SpecimenAuto extends LinearOpMode {
 
     private Follower follower;
@@ -47,24 +47,24 @@ public class SpecimenAuto extends LinearOpMode {
     private int scoredSpecimens = 0;
     private int collectedSamples = 0;
 
-    private final Pose startPose = new Pose(7.5, -5, Math.toRadians(180));
+    private final Pose startPose = new Pose(-14, 3, Math.toRadians(180));
 
-    private final Pose scorePose = new Pose(33, -5, Math.toRadians(180));
-    private final Pose scoreControlPose = new Pose(23, -5, Math.toRadians(180));
+    private final Pose scorePose = new Pose(15, 3, Math.toRadians(180));
+//    private final Pose scoreControlPose = new Pose(23, -5, Math.toRadians(180));
 
 
-    private final Pose pickupPose = new Pose(20, -41, Math.toRadians(180));
+    private final Pose pickupPose = new Pose(2, -30, Math.toRadians(180));
     private final Pose pickupControlPose = new Pose(32, -41, Math.toRadians(180));
 
     private final Pose parkPose = new Pose(4, -42, Math.toRadians(90));
-    private final Pose parkControlPose = new Pose(4, -42, Math.toRadians(90));
+//    private final Pose parkControlPose = new Pose(4, -42, Math.toRadians(90));
 
-    private final Pose pickupSamplePose1 = new Pose(20, -27, Math.toRadians(-30));
-    private final Pose pickupSamplePose2 = new Pose(20, -35, Math.toRadians(-30));
-    private final Pose pickupSamplePose3 = new Pose(20, -40, Math.toRadians(-30));
+    private final Pose pickupSamplePose1 = new Pose(17, -32, Math.toRadians(-30));
+    private final Pose pickupSamplePose2 = new Pose(17, -44, Math.toRadians(-30));
+    private final Pose pickupSamplePose3 = new Pose(17, -53, Math.toRadians(-30));
 
-    private final Pose dropSamplePose1 = new Pose(20, -27, Math.toRadians(-60));
-    private final Pose dropSamplePose2 = new Pose(20, -35, Math.toRadians(-60));
+    private final Pose dropSamplePose1 = new Pose(12, -32, Math.toRadians(-120));
+    private final Pose dropSamplePose2 = new Pose(12, -45, Math.toRadians(-120));
 
 //    private final Pose dropSamplePose3 = new Pose(20, -40, Math.toRadians(-60));
 
@@ -80,12 +80,12 @@ public class SpecimenAuto extends LinearOpMode {
                 .build();
 
         grabPickup = follower.pathBuilder()
-                .addPath(new BezierCurve(new Point(scorePose), new Point(scoreControlPose), new Point(pickupControlPose), new Point(pickupPose)))
+                .addPath(new BezierLine(new Point(scorePose), new Point(pickupPose)))
                 .setConstantHeadingInterpolation(Math.toRadians(180))
                 .build();
 
         scorePickup = follower.pathBuilder()
-                .addPath(new BezierCurve(new Point(pickupPose), new Point(scoreControlPose) ,new Point(scorePose)))
+                .addPath(new BezierLine(new Point(pickupPose), new Point(scorePose)))
                 .setConstantHeadingInterpolation(Math.toRadians(180))
                 .build();
 
@@ -121,7 +121,7 @@ public class SpecimenAuto extends LinearOpMode {
 
 
         park = follower.pathBuilder()
-                .addBezierCurve(new Point(scorePose), new Point(parkControlPose), new Point(parkPose))
+                .addBezierLine(new Point(scorePose), new Point(parkPose))
                 .setLinearHeadingInterpolation(scorePose.getHeading(), parkPose.getHeading())
                 .build();
     }
@@ -129,10 +129,10 @@ public class SpecimenAuto extends LinearOpMode {
     public void autonomousPathUpdate() {
         switch (pathState) {
             case ScorePreload:
-                if (pathTimer.getElapsedTimeSeconds() >= 0.3) {
+                if (pathTimer.getElapsedTimeSeconds() >= 0.6) {
                     extension.goHighChamber();
                 }
-                if (!follower.isBusy() && !extension.isBusy()) {
+                if (!follower.isBusy()) {
                     setPathState(PathState.Scoring);
                 }
                 break;
@@ -142,7 +142,7 @@ public class SpecimenAuto extends LinearOpMode {
 
                 if (pathTimer.getElapsedTimeSeconds() <= 0.1) {
                     gripper.open();
-                } else if (pathTimer.getElapsedTimeSeconds() >= 0.3) {
+                } else if (pathTimer.getElapsedTimeSeconds() >= 0.1) {
                     scoredSpecimens++;
 
                     if (scoredSpecimens == 1) {
@@ -160,35 +160,35 @@ public class SpecimenAuto extends LinearOpMode {
                     }
                 }
                 break;
-            case ScoreToPickup:
-                if(!follower.isBusy() && Pivot.angle <= 20) {
-                    setPathState(PathState.Pickup);
-                }
-                break;
-            case Pickup:
-                double pickupTime = pathTimer.getElapsedTimeSeconds();
-                double waitTime = 0.8;
-                if (pickupTime >= waitTime && pickupTime <= waitTime + 0.8) {
-                    extension.setTarget(Extension.LOWER_LIMIT + 4000);
-                } else if (waitTime + 0.8 < pickupTime && pickupTime <= waitTime + 1.0) {
-                    gripper.close();
-                } else if (pickupTime > waitTime + 1.0) {
-                    pivot.goUp();
-                    follower.followPath(scorePickup, true);
-                    setPathState(PathState.PickupToScore);
-                }
-                break;
-            case PickupToScore:
-                if (Pivot.angle >= 50) {
-                    extension.goHighChamber();
-                }
-                if(!follower.isBusy()) {
-                    setPathState(PathState.Scoring);
-                }
-                break;
+//            case ScoreToPickup:
+//                if(!follower.isBusy() && Pivot.angle <= 20) {
+//                    setPathState(PathState.Pickup);
+//                }
+//                break;
+//            case Pickup:
+//                double pickupTime = pathTimer.getElapsedTimeSeconds();
+//                double waitTime = 0.8;
+//                if (pickupTime >= waitTime && pickupTime <= waitTime + 0.8) {
+//                    extension.setTarget(Extension.LOWER_LIMIT + 4000);
+//                } else if (waitTime + 0.8 < pickupTime && pickupTime <= waitTime + 1.0) {
+//                    gripper.close();
+//                } else if (pickupTime > waitTime + 1.0) {
+//                    pivot.goUp();
+//                    follower.followPath(scorePickup, true);
+//                    setPathState(PathState.PickupToScore);
+//                }
+//                break;
+//            case PickupToScore:
+//                if (Pivot.angle >= 50) {
+//                    extension.goHighChamber();
+//                }
+//                if(!follower.isBusy()) {
+//                    setPathState(PathState.Scoring);
+//                }
+//                break;
             case GoToSample:
 
-                if (pathTimer.getElapsedTimeSeconds() >= 1.0) {
+                if (pathTimer.getElapsedTimeSeconds() >= 0.1) {
                     arm.intakeAuto();
                     gripper.turn(-30);
                 }
@@ -226,7 +226,7 @@ public class SpecimenAuto extends LinearOpMode {
                         setPathState(PathState.GoToSample);
                     } else if (pathTimer.getElapsedTimeSeconds() >= 1.2) {
                         arm.intakeSpecimen();
-                        setPathState(PathState.Pickup);
+//                        setPathState(PathState.Pickup);
                     }
                 }
                 break;

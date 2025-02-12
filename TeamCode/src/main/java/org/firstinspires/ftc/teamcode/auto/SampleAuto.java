@@ -51,13 +51,13 @@ public class SampleAuto extends LinearOpMode {
 
     private final Pose startPose = new Pose(-11.2, -8, Math.toRadians(-90));
 
-    private final Pose scorePose = new Pose(7, 11, Math.toRadians(-45));
+    private final Pose scorePose = new Pose(6, 10, Math.toRadians(-45));
 
-    private final Pose pickup1Pose = new Pose(13, 11, Math.toRadians(0));
+    private final Pose pickup1Pose = new Pose(13, 10, Math.toRadians(0));
 
-    private final Pose pickup2Pose = new Pose(13, 18, Math.toRadians(0));
+    private final Pose pickup2Pose = new Pose(13, 17, Math.toRadians(0));
 
-    private final Pose pickup3Pose = new Pose(16, 24, Math.toRadians(30));
+    private final Pose pickup3Pose = new Pose(16, 23, Math.toRadians(30));
 
     private final Pose parkPose = new Pose(52, -20, Math.toRadians(90));
 
@@ -112,10 +112,10 @@ public class SampleAuto extends LinearOpMode {
     public void autonomousPathUpdate() {
         switch (pathState) {
             case StartToBasket:
-                if (pathTimer.getElapsedTimeSeconds() >= 0.6) {
+                if (pathTimer.getElapsedTimeSeconds() >= 0.3) {
                     extension.goHighBasket();
                 }
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() >= 0.7) { // verifica daca a ajuns la cos
+                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() >= 0.4) { // verifica daca a ajuns la cos
                     setPathState(PathState.ExtendingScore);
                 }
                 break;
@@ -133,11 +133,11 @@ public class SampleAuto extends LinearOpMode {
                 break;
             case Scoring:
                 double scoringTime = pathTimer.getElapsedTimeSeconds();
-                if (scoringTime >= 0.4 && scoringTime <= 0.5) { // timp de cand a ajuns sus ca sa se invarta bratu
+                if (scoringTime >= 0.3 && scoringTime <= 0.4) { // timp de cand a ajuns sus ca sa se invarta bratu
                     gripper.open();
-                } else if (0.8 < scoringTime) {
+                } else if (0.7 < scoringTime) {
                     scoredSamples++;
-                    extension.setTarget(Extension.LOWER_LIMIT);
+                    extension.goDown();
                     setPathState(PathState.RetractingScore);
                 }
                 break;
