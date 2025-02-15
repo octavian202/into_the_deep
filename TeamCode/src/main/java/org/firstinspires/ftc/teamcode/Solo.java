@@ -10,7 +10,9 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.commands.Ascend;
 import org.firstinspires.ftc.teamcode.commands.DriveRobotCentric;
+import org.firstinspires.ftc.teamcode.commands.ExtendAscend;
 import org.firstinspires.ftc.teamcode.commands.GripperRoll;
 import org.firstinspires.ftc.teamcode.commands.ManualPivot;
 import org.firstinspires.ftc.teamcode.commands.PickUpSample;
@@ -42,8 +44,8 @@ public class Solo extends LinearOpMode {
         Gripper gripper = new Gripper(hardwareMap);
         Arm arm = new Arm(hardwareMap);
 
-        Trigger pivotIsUp = new Trigger(() -> pivot.getAngle() >= 45);
-        Trigger pivotIsDown = new Trigger(() -> pivot.getAngle() < 45);
+        Trigger pivotIsUp = new Trigger(() -> pivot.getAngle() >= 20);
+        Trigger pivotIsDown = new Trigger(() -> pivot.getAngle() < 20);
         Trigger extended = new Trigger(() -> extension.getTarget() >= 10000 && !extension.isBusy());
         Trigger retracted = new Trigger(() -> extension.getTarget() < 10000 && !extension.isBusy());
 
@@ -79,10 +81,25 @@ public class Solo extends LinearOpMode {
                         new InstantCommand(extension::goHighChamber),
                         pivotIsDown::get
                 ),
-                () -> extension.getPosition() <= 10000
+                () -> extension.getPosition() <= 18000
+        ));
+        gp.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenPressed(new ConditionalCommand(
+                new InstantCommand(() -> extension.setTarget(16000)),
+                new ConditionalCommand(
+                        new InstantCommand(extension::goDown),
+                        new InstantCommand(extension::goHighChamber),
+                        pivotIsDown::get
+                ),
+                () -> extension.getPosition() <= 9000
         ));
 
         gp.getGamepadButton(GamepadKeys.Button.X).and(pivotIsDown).whenActive(new PickUpSample(arm, gripper));
+
+        gp.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(new ExtendAscend(extension));
+        gp.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenPressed(new Ascend(extension));
+
+        (new Trigger(() -> extension.isAscending)).whileActiveContinuous(arm::outtakeSpecimen);
+
 
         pivotIsUp.whenActive(extension::goHighChamber);
         pivotIsDown.whenActive(extension::goDown);
@@ -101,6 +118,10 @@ public class Solo extends LinearOpMode {
         pivotIsDown.and(new Trigger(() -> extension.getTarget() <= 10000)).whenActive(arm::intakeSpecimen);
 
         waitForStart();
+
+        arm.outtakeSpecimen();
+        extension.goHighChamber();
+        gripper.turn(180);
 
         while (opModeIsActive()) {
             CommandScheduler.getInstance().run();

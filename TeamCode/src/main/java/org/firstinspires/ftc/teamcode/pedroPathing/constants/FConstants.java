@@ -28,17 +28,17 @@ public class FConstants {
         FollowerConstants.forwardZeroPowerAcceleration = -29.0;
         FollowerConstants.lateralZeroPowerAcceleration = -67.0;
 
-        FollowerConstants.translationalPIDFCoefficients.setCoefficients(0.1,0d,0.015,0d);
+        FollowerConstants.translationalPIDFCoefficients.setCoefficients(0.08,0d,0.008,0d);
         FollowerConstants.useSecondaryTranslationalPID = true;
-        FollowerConstants.secondaryTranslationalPIDFCoefficients.setCoefficients(0.1,0d,0.005,0d); // Not being used, @see useSecondaryTranslationalPID
+        FollowerConstants.secondaryTranslationalPIDFCoefficients.setCoefficients(0.07,0d,0.005,0d); // Not being used, @see useSecondaryTranslationalPID
 
-        FollowerConstants.headingPIDFCoefficients.setCoefficients(0.8,0d,0.04,0d);
+        FollowerConstants.headingPIDFCoefficients.setCoefficients(0.8,0d,0.02,0d);
         FollowerConstants.useSecondaryHeadingPID = true;
-        FollowerConstants.secondaryHeadingPIDFCoefficients.setCoefficients(1,0d,0.04,0d); // Not being used, @see useSecondaryHeadingPID
+        FollowerConstants.secondaryHeadingPIDFCoefficients.setCoefficients(1.7,0d,0.05,0d); // Not being used, @see useSecondaryHeadingPID
 
-        FollowerConstants.drivePIDFCoefficients.setCoefficients(0.01,0d,0.0001,0.6,0d);
+        FollowerConstants.drivePIDFCoefficients.setCoefficients(0.01,0d,0.00002,0.6,0d);
         FollowerConstants.useSecondaryDrivePID = true;
-        FollowerConstants.secondaryDrivePIDFCoefficients.setCoefficients(0.01,0d,0d,0.6,0d); // Not being used, @see useSecondaryDrivePID
+        FollowerConstants.secondaryDrivePIDFCoefficients.setCoefficients(0.015,0d,0d,0.6,0d); // Not being used, @see useSecondaryDrivePID
 
         FollowerConstants.zeroPowerAccelerationMultiplier = 1;
         FollowerConstants.centripetalScaling = 0.0005;
@@ -50,5 +50,9 @@ public class FConstants {
         FollowerConstants.pathEndHeadingConstraint = 0.007;
 
         FollowerConstants.useBrakeModeInTeleOp = true;
+
+        FollowerConstants.useVoltageCompensationInAuto = true;
+        FollowerConstants.nominalVoltage = 13.50;
+
     }
 }

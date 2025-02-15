@@ -11,9 +11,9 @@ public class GoToDefaultPosition extends SequentialCommandGroup {
 
     public GoToDefaultPosition(Pivot pivot) {
         addCommands(
-                new WaitCommand(100),
+//                new WaitCommand(100),
                 new InstantCommand(pivot::goUp),
-                new WaitCommand(700),
+                new WaitCommand(400),
                 new InstantCommand(pivot::resetAngleVertical)
         );
 

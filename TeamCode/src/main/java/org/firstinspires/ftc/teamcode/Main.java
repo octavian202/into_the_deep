@@ -10,7 +10,9 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.commands.Ascend;
 import org.firstinspires.ftc.teamcode.commands.DriveRobotCentric;
+import org.firstinspires.ftc.teamcode.commands.ExtendAscend;
 import org.firstinspires.ftc.teamcode.commands.GripperRoll;
 import org.firstinspires.ftc.teamcode.commands.ManualPivot;
 import org.firstinspires.ftc.teamcode.commands.PickUpSample;
@@ -78,10 +80,24 @@ public class Main extends LinearOpMode {
                 () -> extension.getPosition() <= 10000
         ));
 
+        gp2.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenPressed(new ConditionalCommand(
+                new InstantCommand(() -> extension.setTarget(16000)),
+                new ConditionalCommand(
+                        new InstantCommand(extension::goDown),
+                        new InstantCommand(extension::goHighChamber),
+                        pivotIsDown::get
+                ),
+                () -> extension.getPosition() <= 9000
+        ));
+
         gp2.getGamepadButton(GamepadKeys.Button.DPAD_UP).and(pivotIsDown).whenActive(new InstantCommand(arm::intakeSpecimen, arm));
         gp2.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).and(pivotIsDown).whenActive(new InstantCommand(arm::intakeOverSubmersible));
         gp2.getGamepadButton(GamepadKeys.Button.X).and(pivotIsDown).whenActive(new PickUpSample(arm, gripper));
 
+        gp2.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(new ExtendAscend(extension));
+        gp2.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenPressed(new Ascend(extension));
+
+        (new Trigger(() -> extension.isAscending)).whileActiveContinuous(arm::outtakeSpecimen);
 
         pivotIsUp.whenActive(extension::goHighChamber);
         pivotIsDown.whenActive(extension::goDown);

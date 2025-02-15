@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.auto;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.command.CommandScheduler;
 import com.arcrobotics.ftclib.command.button.Trigger;
 import com.pedropathing.follower.Follower;
@@ -13,6 +15,7 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.commands.AutoArmControl;
 import org.firstinspires.ftc.teamcode.commands.GoToDefaultPosition;
 import org.firstinspires.ftc.teamcode.commands.PickUpSample;
@@ -30,6 +33,7 @@ public class SampleAuto extends LinearOpMode {
 
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
+    private Telemetry telemetryA;
 
     /** This is the variable where we store the state of our auto.
      * It is used by the pathUpdate method. */
@@ -40,7 +44,7 @@ public class SampleAuto extends LinearOpMode {
     private Pivot pivot;
     private Gripper gripper;
     private GoToDefaultPosition goToDefaultPosition;
-    private AutoArmControl autoArmControl;
+//    private AutoArmControl autoArmControl;
     private PickUpSample pickUpSample;
     private int scoredSamples = 0;
 
@@ -51,13 +55,13 @@ public class SampleAuto extends LinearOpMode {
 
     private final Pose startPose = new Pose(-11.2, -8, Math.toRadians(-90));
 
-    private final Pose scorePose = new Pose(6, 10, Math.toRadians(-45));
+    private final Pose scorePose = new Pose(5, 9, Math.toRadians(-45));
 
     private final Pose pickup1Pose = new Pose(13, 10, Math.toRadians(0));
 
     private final Pose pickup2Pose = new Pose(13, 17, Math.toRadians(0));
 
-    private final Pose pickup3Pose = new Pose(16, 23, Math.toRadians(30));
+    private final Pose pickup3Pose = new Pose(16, 22, Math.toRadians(30));
 
     private final Pose parkPose = new Pose(52, -20, Math.toRadians(90));
 
@@ -115,7 +119,7 @@ public class SampleAuto extends LinearOpMode {
                 if (pathTimer.getElapsedTimeSeconds() >= 0.3) {
                     extension.goHighBasket();
                 }
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() >= 0.4) { // verifica daca a ajuns la cos
+                if (!follower.isBusy()) { // verifica daca a ajuns la cos
                     setPathState(PathState.ExtendingScore);
                 }
                 break;
@@ -133,7 +137,7 @@ public class SampleAuto extends LinearOpMode {
                 break;
             case Scoring:
                 double scoringTime = pathTimer.getElapsedTimeSeconds();
-                if (scoringTime >= 0.3 && scoringTime <= 0.4) { // timp de cand a ajuns sus ca sa se invarta bratu
+                if (scoringTime >= 0.4 && scoringTime <= 0.5) { // timp de cand a ajuns sus ca sa se invarta bratu
                     gripper.open();
                 } else if (0.7 < scoringTime) {
                     scoredSamples++;
@@ -230,6 +234,8 @@ public class SampleAuto extends LinearOpMode {
 
         CommandScheduler.getInstance().reset();
 
+        telemetryA = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
+
         pathTimer = new Timer();
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
@@ -251,7 +257,7 @@ public class SampleAuto extends LinearOpMode {
         extension.goHighChamber();
 
         goToDefaultPosition = new GoToDefaultPosition(pivot);
-        autoArmControl = new AutoArmControl(arm, gripper, extension);
+//        autoArmControl = new AutoArmControl(arm, gripper, extension);
         pickUpSample = new PickUpSample(arm, gripper);
 
         Trigger pivotIsUp = new Trigger(() -> pivot.getAngle() >= 45);
@@ -277,6 +283,8 @@ public class SampleAuto extends LinearOpMode {
 
             follower.update();
             autonomousPathUpdate();
+
+            follower.telemetryDebug(telemetryA);
 
 //            telemetry.addData("path state", pathState);
 //            telemetry.addData("x", follower.getPose().getX());
