@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.commands.Ascend;
+import org.firstinspires.ftc.teamcode.commands.Drive;
 import org.firstinspires.ftc.teamcode.commands.DriveRobotCentric;
 import org.firstinspires.ftc.teamcode.commands.ExtendAscend;
 import org.firstinspires.ftc.teamcode.commands.GripperRoll;
@@ -20,6 +21,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Arm;
 import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
 import org.firstinspires.ftc.teamcode.subsystems.Extension;
 import org.firstinspires.ftc.teamcode.subsystems.Gripper;
+import org.firstinspires.ftc.teamcode.subsystems.PedroDrivetrain;
 import org.firstinspires.ftc.teamcode.subsystems.Pivot;
 
 import java.util.List;
@@ -38,19 +40,20 @@ public class Solo extends LinearOpMode {
 
         GamepadEx gp = new GamepadEx(gamepad1);
 
-        Drivetrain drivetrain = new Drivetrain(hardwareMap);
+        PedroDrivetrain pedroDrivetrain = new PedroDrivetrain(hardwareMap);
         Pivot pivot = new Pivot(hardwareMap);
         Extension extension = new Extension(hardwareMap);
         Gripper gripper = new Gripper(hardwareMap);
         Arm arm = new Arm(hardwareMap);
 
-        Trigger pivotIsUp = new Trigger(() -> pivot.getAngle() >= 20);
-        Trigger pivotIsDown = new Trigger(() -> pivot.getAngle() < 20);
+        Trigger pivotIsUp = new Trigger(() -> pivot.getAngle() >= 45);
+        Trigger pivotIsDown = new Trigger(() -> pivot.getAngle() < 45);
         Trigger extended = new Trigger(() -> extension.getTarget() >= 10000 && !extension.isBusy());
-        Trigger retracted = new Trigger(() -> extension.getTarget() < 10000 && !extension.isBusy());
+        Trigger retracted = new Trigger(() -> extension.getTarget() < 11000 && !extension.isBusy());
 
 
-        drivetrain.setDefaultCommand(new DriveRobotCentric(drivetrain, gp::getLeftX, gp::getLeftY, gp::getRightX));
+        Supplier<Double> speedSupplier = () -> 1.0 - gp.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) * 0.6;
+        pedroDrivetrain.setDefaultCommand(new Drive(pedroDrivetrain, gp::getLeftX, gp::getLeftY, () -> gp.getRightX() * 0.6, () -> 1.0));
 
         pivot.resetAngleVertical();
 

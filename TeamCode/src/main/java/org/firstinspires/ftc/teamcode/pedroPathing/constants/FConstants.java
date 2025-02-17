@@ -38,7 +38,7 @@ public class FConstants {
 
         FollowerConstants.drivePIDFCoefficients.setCoefficients(0.01,0d,0.00002,0.6,0d);
         FollowerConstants.useSecondaryDrivePID = true;
-        FollowerConstants.secondaryDrivePIDFCoefficients.setCoefficients(0.015,0d,0d,0.6,0d); // Not being used, @see useSecondaryDrivePID
+        FollowerConstants.secondaryDrivePIDFCoefficients.setCoefficients(0.015,0d,0.00002,0.6,0d); // Not being used, @see useSecondaryDrivePID
 
         FollowerConstants.zeroPowerAccelerationMultiplier = 1;
         FollowerConstants.centripetalScaling = 0.0005;
@@ -52,7 +52,7 @@ public class FConstants {
         FollowerConstants.useBrakeModeInTeleOp = true;
 
         FollowerConstants.useVoltageCompensationInAuto = true;
-        FollowerConstants.nominalVoltage = 13.50;
+        FollowerConstants.nominalVoltage = 13.75;
 
     }
 }

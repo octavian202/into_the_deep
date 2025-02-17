@@ -12,7 +12,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 public class Extension extends SubsystemBase {
 
 
-    public static final int HIGH_BASKET = 47000, HIGH_CHAMBER = 7000, LOW_BASKET = 18000;
+    public static final int HIGH_BASKET = 47000, HIGH_CHAMBER = 8900, LOW_BASKET = 18000;
     public static double KP = 0.0005, KI = 0, KD = 0.000015, KG = 0.16;
     public static double ASCEND_KP = 0.002;
     public static int HORIZONTAL_LIMIT = 18000, LOWER_LIMIT = 0;

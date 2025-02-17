@@ -3,12 +3,10 @@ package org.firstinspires.ftc.teamcode.auto;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.command.CommandScheduler;
-import com.arcrobotics.ftclib.command.InstantCommand;
 import com.arcrobotics.ftclib.command.button.Trigger;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.localization.Pose;
 import com.pedropathing.pathgen.BezierCurve;
-import com.pedropathing.pathgen.BezierLine;
 import com.pedropathing.pathgen.PathChain;
 import com.pedropathing.pathgen.Point;
 import com.pedropathing.util.Constants;
@@ -18,7 +16,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.commands.AutoArmControl;
 import org.firstinspires.ftc.teamcode.commands.GoToDefaultPosition;
 import org.firstinspires.ftc.teamcode.commands.PickUpSample;
 import org.firstinspires.ftc.teamcode.pedroPathing.constants.*;
@@ -50,74 +47,115 @@ public class SpecimenAuto extends LinearOpMode {
     private int scoredSpecimens = 0;
     private int collectedSamples = 0;
 
-    private final Pose startPose = new Pose(-14, 3, Math.toRadians(180));
+    private final Pose startPose = new Pose(8.5, 65, Math.toRadians(180));
+    private final Pose scorePreloadControlPose = new Pose(38, 65, Math.toRadians(180));
+    private final Pose scorePreloadPose = new Pose(38, 65, Math.toRadians(180));
 
-    private final Pose scorePose = new Pose(15, 3, Math.toRadians(180));
-//    private final Pose scoreControlPose = new Pose(23, -5, Math.toRadians(180));
 
 
-    private final Pose pickupPose = new Pose(2, -30, Math.toRadians(180));
-    private final Pose pickupControlPose = new Pose(32, -41, Math.toRadians(180));
+    private final Pose scorePose = new Pose(39, 70, Math.toRadians(180));
+    private final Pose scoreControlPose1 = new Pose(23, 65, Math.toRadians(180));
+    private final Pose scoreControlPose2 = new Pose(35, 73, Math.toRadians(180));
+    private final Pose scoreControlPose3 = new Pose(35, 73, Math.toRadians(180));
 
-    private final Pose parkPose = new Pose(4, -42, Math.toRadians(90));
+
+
+    private final Pose pickupPose = new Pose(22, 27, Math.toRadians(180));
+    private final Pose pickupControlPose = new Pose(35, 27, Math.toRadians(180));
+
+    private final Pose parkPose = new Pose(15, 27, Math.toRadians(90));
 //    private final Pose parkControlPose = new Pose(4, -42, Math.toRadians(90));
 
-    private final Pose pickupSamplePose1 = new Pose(16, -30.5, Math.toRadians(-30));
-    private final Pose pickupSamplePose2 = new Pose(16, -40.0, Math.toRadians(-30));
-    private final Pose pickupSamplePose3 = new Pose(16, -48.5, Math.toRadians(-30));
+    private final Pose dropSamplePose1 = new Pose(30, 26, Math.toRadians(180));
+    private final Pose dropSamplePose2 = new Pose(32, 14, Math.toRadians(180));
+    private final Pose dropSamplePose3 = new Pose(22, 9, Math.toRadians(180));
 
-    private final Pose dropSamplePose1 = new Pose(4, -40, Math.toRadians(-160));
-    private final Pose dropSamplePose2 = new Pose(4, -47, Math.toRadians(-160));
+    private final Pose samplePose1 = new Pose(60, 26, Math.toRadians(180));
+    private final Pose samplePose2 = new Pose(60, 14, Math.toRadians(180));
+    private final Pose samplePose3 = new Pose(60, 9, Math.toRadians(180));
 
 
     private PathChain scorePreload, park;
-    private PathChain grabPickup, scorePickup, grabSample1, dropSample1, grabSample2, dropSample2, grabSample3, dropSample3;
+    private PathChain scorePickup1, scorePickup2, scorePickup3, grabPickup, grabPickup1, grabPickup2, grabPickup3, scorePickup, collectSample1, collectSample2, collectSample3, samplesToPickup;
 
     public void buildPaths() {
 
         scorePreload = follower.pathBuilder()
-                .addBezierLine(new Point(startPose), new Point(scorePose))
+                .addBezierLine(new Point(startPose), new Point(scorePreloadControlPose))
+                .setZeroPowerAccelerationMultiplier(4.0)
                 .setConstantHeadingInterpolation(startPose.getHeading())
                 .build();
 
         grabPickup = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(scorePose), new Point(pickupPose)))
+                .addPath(new BezierCurve(new Point(scorePose), new Point(pickupControlPose), new Point(pickupPose)))
+                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .build();
+
+        grabPickup1 = follower.pathBuilder()
+                .addPath(new BezierCurve(new Point(scorePose), new Point(pickupControlPose), new Point(pickupPose)))
+                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .build();
+
+        grabPickup2 = follower.pathBuilder()
+                .addPath(new BezierCurve(new Point(scorePose), new Point(pickupControlPose), new Point(pickupPose)))
+                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .build();
+
+        grabPickup3 = follower.pathBuilder()
+                .addPath(new BezierCurve(new Point(scorePose), new Point(pickupControlPose), new Point(pickupPose)))
                 .setConstantHeadingInterpolation(Math.toRadians(180))
                 .build();
 
         scorePickup = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(pickupPose), new Point(scorePose)))
+                .addPath(new BezierCurve(new Point(dropSamplePose3), new Point(scoreControlPose1), new Point(scoreControlPose2), new Point(scoreControlPose3), new Point(scorePose)))
+                .setZeroPowerAccelerationMultiplier(4.0)
                 .setConstantHeadingInterpolation(Math.toRadians(180))
                 .build();
 
-        grabSample1 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(scorePose), new Point(pickupSamplePose1)))
-                .setLinearHeadingInterpolation(scorePose.getHeading(), pickupSamplePose1.getHeading())
+
+        scorePickup1 = follower.pathBuilder()
+                .addPath(new BezierCurve(new Point(pickupPose), new Point(scoreControlPose1), new Point(scoreControlPose2), new Point(scoreControlPose3), new Point(scorePose)))
+                .setZeroPowerAccelerationMultiplier(4.0)
+                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .build();
+        scorePickup2 = follower.pathBuilder()
+                .addPath(new BezierCurve(new Point(pickupPose), new Point(scoreControlPose1), new Point(scoreControlPose2), new Point(scoreControlPose3), new Point(scorePose)))
+                .setZeroPowerAccelerationMultiplier(4.0)
+                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .build();
+        scorePickup3 = follower.pathBuilder()
+                .addPath(new BezierCurve(new Point(pickupPose), new Point(scoreControlPose1), new Point(scoreControlPose2), new Point(scoreControlPose3), new Point(scorePose)))
+                .setZeroPowerAccelerationMultiplier(4.0)
+                .setConstantHeadingInterpolation(Math.toRadians(180))
                 .build();
 
-        dropSample1 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(pickupSamplePose1), new Point(dropSamplePose1)))
-                .setLinearHeadingInterpolation(pickupSamplePose1.getHeading(), dropSamplePose1.getHeading())
+        collectSample1 = follower.pathBuilder()
+                .addBezierCurve(new Point(scorePose), new Point(new Pose(20, 25)), new Point(new Pose(60, 45)),  new Point(samplePose1))
+                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .addBezierCurve(new Point(samplePose1), new Point(dropSamplePose1), new Point(dropSamplePose1))
+                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .setZeroPowerAccelerationMultiplier(6.0)
                 .build();
 
-        grabSample2 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(dropSamplePose1), new Point(pickupSamplePose2)))
-                .setLinearHeadingInterpolation(dropSamplePose1.getHeading(), pickupSamplePose2.getHeading())
+        collectSample2 = follower.pathBuilder()
+                .addBezierCurve(new Point(dropSamplePose1), new Point(new Pose(60, 24)), new Point(samplePose2))
+                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .addBezierCurve(new Point(samplePose2), new Point(dropSamplePose2), new Point(dropSamplePose2))
+                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .setZeroPowerAccelerationMultiplier(6.0)
                 .build();
 
-        dropSample2 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(pickupSamplePose2), new Point(dropSamplePose2)))
-                .setLinearHeadingInterpolation(pickupSamplePose2.getHeading(), dropSamplePose2.getHeading())
+        collectSample3 = follower.pathBuilder()
+                .addBezierCurve(new Point(dropSamplePose2), new Point(new Pose(56, 14)), new Point(samplePose3))
+                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .addBezierCurve(new Point(samplePose3), new Point(dropSamplePose3), new Point(dropSamplePose3))
+                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .setZeroPowerAccelerationMultiplier(4.0)
                 .build();
 
-        grabSample3 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(dropSamplePose2), new Point(pickupSamplePose3)))
-                .setLinearHeadingInterpolation(dropSamplePose2.getHeading(), pickupSamplePose3.getHeading())
-                .build();
-
-        dropSample3 = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(pickupSamplePose3), new Point(pickupPose)))
-                .setLinearHeadingInterpolation(pickupSamplePose3.getHeading(), pickupPose.getHeading())
+        samplesToPickup = follower.pathBuilder()
+                .addBezierCurve(new Point(dropSamplePose3), new Point(pickupPose))
+                .setConstantHeadingInterpolation(Math.toRadians(180))
                 .build();
 
 
@@ -130,7 +168,7 @@ public class SpecimenAuto extends LinearOpMode {
     public void autonomousPathUpdate() {
         switch (pathState) {
             case ScorePreload:
-                if (pathTimer.getElapsedTimeSeconds() >= 0.9) {
+                if (pathTimer.getElapsedTimeSeconds() >= 0.6) {
                     extension.goHighChamber();
                 }
                 if (!follower.isBusy()) {
@@ -141,102 +179,98 @@ public class SpecimenAuto extends LinearOpMode {
 
                 // e facut deja
 
-                if (pathTimer.getElapsedTimeSeconds() <= 0.1) {
-                    gripper.open();
-                } else if (pathTimer.getElapsedTimeSeconds() >= 0.1) {
-                    scoredSpecimens++;
+                gripper.open();
+                extension.goDown();
+
+                scoredSpecimens++;
+
+                if (scoredSpecimens == 1) {
+                    pivot.goDown();
+                    extension.goDown();
+                    follower.followPath(collectSample1, false);
+                    setPathState(PathState.CollectSample);
+                } else if (scoredSpecimens < 5) {
+                    pivot.goDown();
+                    extension.goDown();
+
+                    if (scoredSpecimens == 2) {
+                        follower.followPath(grabPickup, true);
+                    } else if (scoredSpecimens == 3) {
+                        follower.followPath(grabPickup1, true);
+                    } else if (scoredSpecimens == 4) {
+                        follower.followPath(grabPickup2, true);
+                    }
+
+                    setPathState(PathState.ScoreToPickup);
+                } else {
+                    follower.followPath(park);
+                    setPathState(PathState.Park);
+                }
+
+//                if (pathTimer.getElapsedTimeSeconds() <= 0.1) {
+//                    gripper.open();
+//                } else if (pathTimer.getElapsedTimeSeconds() >= 0.1) {
+//                }
+                break;
+            case ScoreToPickup:
+                if(!follower.isBusy() && Pivot.angle <= 20 && pathTimer.getElapsedTimeSeconds() >= 0.3) {
+                    setPathState(PathState.Pickup);
+                }
+                break;
+            case Pickup:
+                double pickupTime = pathTimer.getElapsedTimeSeconds();
+                double waitTime = 0.1;
+                if (pickupTime >= waitTime && pickupTime <= waitTime + 0.3) {
+                    extension.setTarget(Extension.LOWER_LIMIT + 4000);
+                } else if (waitTime + 0.8 < pickupTime && pickupTime <= waitTime + 0.9) {
+                    gripper.close();
+                } else if (pickupTime > waitTime + 1.0) {
+                    pivot.goUp();
 
                     if (scoredSpecimens == 1) {
-                        follower.followPath(grabSample1, true);
-                        pivot.goDown();
-                        extension.goDown();
-                        setPathState(PathState.GoToSample);
-                    } else if (scoredSpecimens < 5) {
-                        pivot.goDown();
-                        follower.followPath(grabPickup, true);
-                        setPathState(PathState.ScoreToPickup);
-                    } else {
-                        follower.followPath(park);
-                        setPathState(PathState.Park);
+                        follower.followPath(scorePickup, true);
+                    } else if (scoredSpecimens == 2) {
+                        follower.followPath(scorePickup1, true);
+                    } else if (scoredSpecimens == 3) {
+                        follower.followPath(scorePickup2, true);
+                    } else if (scoredSpecimens == 4) {
+                        follower.followPath(scorePickup3, true);
                     }
+                    setPathState(PathState.PickupToScore);
                 }
                 break;
-//            case ScoreToPickup:
-//                if(!follower.isBusy() && Pivot.angle <= 20) {
-//                    setPathState(PathState.Pickup);
-//                }
-//                break;
-//            case Pickup:
-//                double pickupTime = pathTimer.getElapsedTimeSeconds();
-//                double waitTime = 0.8;
-//                if (pickupTime >= waitTime && pickupTime <= waitTime + 0.8) {
-//                    extension.setTarget(Extension.LOWER_LIMIT + 4000);
-//                } else if (waitTime + 0.8 < pickupTime && pickupTime <= waitTime + 1.0) {
-//                    gripper.close();
-//                } else if (pickupTime > waitTime + 1.0) {
-//                    pivot.goUp();
-//                    follower.followPath(scorePickup, true);
-//                    setPathState(PathState.PickupToScore);
-//                }
-//                break;
-//            case PickupToScore:
-//                if (Pivot.angle >= 50) {
-//                    extension.goHighChamber();
-//                }
-//                if(!follower.isBusy()) {
-//                    setPathState(PathState.Scoring);
-//                }
-//                break;
-            case GoToSample:
-
-                if (pathTimer.getElapsedTimeSeconds() >= 0.1) {
-                    gripper.turn(-30);
+            case PickupToScore:
+                if (Pivot.angle >= 50) {
+                    extension.goHighChamber();
                 }
-                if (!follower.isBusy()) {
-                    extension.goHighBasket();
-                    arm.intakeAuto();
-
-                    if (!extension.isBusy()) {
-                        pickUpSample.schedule();
-                        collectedSamples++;
-                        setPathState(PathState.PickupSample);
-                    }
+                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() >= 0.4) {
+                    setPathState(PathState.Scoring);
                 }
                 break;
-            case PickupSample:
-                if (pathTimer.getElapsedTimeSeconds() >= 0.8) {
-                    if (collectedSamples == 1) {
-                        follower.followPath(dropSample1, true);
-                    } else if (collectedSamples == 2) {
-                        follower.followPath(dropSample2, true);
-                    } else {
-                        follower.followPath(dropSample3, true);
-                    }
-                    extension.goDown();
-                    arm.intakeAuto();
-                    setPathState(PathState.DropoffSample);
-                }
-                break;
-            case DropoffSample:
+            case CollectSample:
 
-                if (collectedSamples == 3 && pathTimer.getElapsedTimeSeconds() >= 0.8) {
-                    gripper.open();
+                if (pathTimer.getElapsedTimeSeconds() >= 0.3) {
+                    pivot.goDown();
                     arm.intakeSpecimen();
-                    gripper.turn(0);
+                    gripper.open();
                 }
 
-                if (!follower.isBusy()) {
-                    gripper.open();
+                if (pathTimer.getElapsedTimeSeconds() >= 0.4 && !follower.isBusy()) {
+                    collectedSamples++;
+
                     if (collectedSamples == 1) {
-                        follower.followPath(grabSample2);
-                        setPathState(PathState.GoToSample);
+                        follower.followPath(collectSample2, false);
+                        setPathState(PathState.CollectSample);
                     } else if (collectedSamples == 2) {
-                        follower.followPath(grabSample3);
-                        setPathState(PathState.GoToSample);
-                    } else if (collectedSamples == 3) {
+                        follower.followPath(collectSample3, true);
+                        setPathState(PathState.CollectSample);
+                    } else {
+                        pivot.goDown();
+                        arm.intakeSpecimen();
                         setPathState(PathState.Pickup);
                     }
                 }
+
                 break;
         }
     }
@@ -290,7 +324,7 @@ public class SpecimenAuto extends LinearOpMode {
 
         opmodeTimer.resetTimer();
 
-        follower.followPath(scorePreload, true);
+        follower.followPath(scorePreload);
         setPathState(PathState.ScorePreload);
 
         goToDefaultPosition.schedule();
@@ -307,17 +341,17 @@ public class SpecimenAuto extends LinearOpMode {
             autonomousPathUpdate();
 
 
-            follower.telemetryDebug(telemetryA);
+//            follower.telemetryDebug(telemetryA);
 
             // Feedback to Driver Hub
 //            telemetry.addData("path state", pathState);
 //            telemetry.addData("x", follower.getPose().getX());
 //            telemetry.addData("y", follower.getPose().getY());
 //            telemetry.addData("heading", follower.getPose().getHeading());
-            telemetry.addData("extension", extension.getPosition());
-            telemetry.addData("target", extension.getTarget());
-            telemetry.addData("busy", extension.isBusy());
-            telemetry.update();
+//            telemetry.addData("extension", extension.getPosition());
+//            telemetry.addData("target", extension.getTarget());
+//            telemetry.addData("busy", extension.isBusy());
+//            telemetry.update();
         }
     }
 
@@ -328,8 +362,7 @@ public class SpecimenAuto extends LinearOpMode {
         PickupToScore,
         Scoring,
         Park,
-        PickupSample,
-        DropoffSample,
+        CollectSample,
         GoToSample,
         Done
     }

@@ -28,7 +28,7 @@ public class Arm extends SubsystemBase {
     }
 
     public void intakeAuto() {
-        arm.setPosition(0.35);
+        arm.setPosition(0.36);
         wrist.setPosition(0.97);
     }
 

@@ -10,8 +10,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.constants.*;
 
 public class PedroDrivetrain extends SubsystemBase {
 
-    private Follower follower;
-    private final Pose startPose = new Pose(0, 0, 0);
+    public Follower follower;
+    public final Pose startPose = new Pose(0, 0, 0);
 
     public PedroDrivetrain(HardwareMap hardwareMap) {
         Constants.setConstants(FConstants.class, LConstants.class);
@@ -28,6 +28,11 @@ public class PedroDrivetrain extends SubsystemBase {
 
     public void drive(double x, double y, double rx) {
         follower.setTeleOpMovementVectors(y, -x, -rx);
+    }
+
+    public void auto() {
+        follower.breakFollowing();
+        follower.resumePathFollowing();
     }
 
 

@@ -53,15 +53,15 @@ public class SampleAuto extends LinearOpMode {
      // This visualizer is very easy to use to find and create paths/pathchains/poses: <https://pedro-path-generator.vercel.app/>
 
 
-    private final Pose startPose = new Pose(-11.2, -8, Math.toRadians(-90));
+    private final Pose startPose = new Pose(6.5, 111.5, Math.toRadians(-90));
 
-    private final Pose scorePose = new Pose(5, 9, Math.toRadians(-45));
+    private final Pose scorePose = new Pose(23, 128, Math.toRadians(-45));
 
-    private final Pose pickup1Pose = new Pose(13, 10, Math.toRadians(0));
+    private final Pose pickup1Pose = new Pose(30, 130, Math.toRadians(0));
 
-    private final Pose pickup2Pose = new Pose(13, 17, Math.toRadians(0));
+    private final Pose pickup2Pose = new Pose(30, 138, Math.toRadians(0));
 
-    private final Pose pickup3Pose = new Pose(16, 22, Math.toRadians(30));
+    private final Pose pickup3Pose = new Pose(32, 141, Math.toRadians(30));
 
     private final Pose parkPose = new Pose(52, -20, Math.toRadians(90));
 
@@ -190,8 +190,10 @@ public class SampleAuto extends LinearOpMode {
                     pickUpSample.schedule();
                 } else if (0.8 <= pickupTime && pickupTime < 0.9) {
                     extension.goDown();
-                } else if (1.0 <= pickupTime) {
+                } else if (1.0 <= pickupTime && pickupTime < 1.5) {
                     pivot.goUp();
+                } else if (pickupTime >= 1.6) {
+                    extension.goHighBasket();
                     setPathState(PathState.PickupToBasket);
                     if (scoredSamples == 1) {
                         follower.followPath(scorePickup1, true);
