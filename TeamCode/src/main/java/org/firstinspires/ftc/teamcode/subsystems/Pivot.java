@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 public class Pivot extends SubsystemBase {
 
     public final double ANGLE_IN_TICK = 0.04271583;
-    public static double KP = 0.025, KI = 0d, KD = 0.003, KF = 0.12;
+    public static double KP = 0.02, KI = 0d, KD = 0.003, KF = 0.12;
     private PIDController pidController;
     Motor motor;
     Motor.Encoder encoder;
@@ -64,7 +64,7 @@ public class Pivot extends SubsystemBase {
 
         double output = pidController.calculate(angle, targetAngle);
         if (this.getAngle() >= 85) {
-            output += 0.1;
+            output += 0.15;
         }
         this.set(output);
 

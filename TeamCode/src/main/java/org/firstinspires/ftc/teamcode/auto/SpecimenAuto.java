@@ -43,32 +43,31 @@ public class SpecimenAuto extends LinearOpMode {
     private Pivot pivot;
     private Gripper gripper;
     private GoToDefaultPosition goToDefaultPosition;
-    private PickUpSample pickUpSample;
     private int scoredSpecimens = 0;
     private int collectedSamples = 0;
 
     private final Pose startPose = new Pose(8.5, 65, Math.toRadians(180));
-    private final Pose scorePreloadControlPose = new Pose(38, 65, Math.toRadians(180));
+    private final Pose scorePreloadControlPose = new Pose(37, 65, Math.toRadians(180));
     private final Pose scorePreloadPose = new Pose(38, 65, Math.toRadians(180));
 
 
 
-    private final Pose scorePose = new Pose(39, 70, Math.toRadians(180));
+    private final Pose scorePose = new Pose(38, 70, Math.toRadians(180));
     private final Pose scoreControlPose1 = new Pose(23, 65, Math.toRadians(180));
     private final Pose scoreControlPose2 = new Pose(35, 73, Math.toRadians(180));
     private final Pose scoreControlPose3 = new Pose(35, 73, Math.toRadians(180));
 
 
 
-    private final Pose pickupPose = new Pose(22, 27, Math.toRadians(180));
+    private final Pose pickupPose = new Pose(21, 27, Math.toRadians(180));
     private final Pose pickupControlPose = new Pose(35, 27, Math.toRadians(180));
 
-    private final Pose parkPose = new Pose(15, 27, Math.toRadians(90));
+    private final Pose parkPose = new Pose(10, 27, Math.toRadians(90));
 //    private final Pose parkControlPose = new Pose(4, -42, Math.toRadians(90));
 
-    private final Pose dropSamplePose1 = new Pose(30, 26, Math.toRadians(180));
-    private final Pose dropSamplePose2 = new Pose(32, 14, Math.toRadians(180));
-    private final Pose dropSamplePose3 = new Pose(22, 9, Math.toRadians(180));
+    private final Pose dropSamplePose1 = new Pose(28, 26, Math.toRadians(180));
+    private final Pose dropSamplePose2 = new Pose(28, 14, Math.toRadians(180));
+    private final Pose dropSamplePose3 = new Pose(19, 9, Math.toRadians(180));
 
     private final Pose samplePose1 = new Pose(60, 26, Math.toRadians(180));
     private final Pose samplePose2 = new Pose(60, 14, Math.toRadians(180));
@@ -81,7 +80,7 @@ public class SpecimenAuto extends LinearOpMode {
     public void buildPaths() {
 
         scorePreload = follower.pathBuilder()
-                .addBezierLine(new Point(startPose), new Point(scorePreloadControlPose))
+                .addBezierLine(new Point(startPose), new Point(scorePose))
                 .setZeroPowerAccelerationMultiplier(4.0)
                 .setConstantHeadingInterpolation(startPose.getHeading())
                 .build();
@@ -132,14 +131,16 @@ public class SpecimenAuto extends LinearOpMode {
         collectSample1 = follower.pathBuilder()
                 .addBezierCurve(new Point(scorePose), new Point(new Pose(20, 25)), new Point(new Pose(60, 45)),  new Point(samplePose1))
                 .setConstantHeadingInterpolation(Math.toRadians(180))
+                .setZeroPowerAccelerationMultiplier(4.0)
                 .addBezierCurve(new Point(samplePose1), new Point(dropSamplePose1), new Point(dropSamplePose1))
                 .setConstantHeadingInterpolation(Math.toRadians(180))
-                .setZeroPowerAccelerationMultiplier(6.0)
+                .setZeroPowerAccelerationMultiplier(7.0)
                 .build();
 
         collectSample2 = follower.pathBuilder()
                 .addBezierCurve(new Point(dropSamplePose1), new Point(new Pose(60, 24)), new Point(samplePose2))
                 .setConstantHeadingInterpolation(Math.toRadians(180))
+                .setZeroPowerAccelerationMultiplier(4.0)
                 .addBezierCurve(new Point(samplePose2), new Point(dropSamplePose2), new Point(dropSamplePose2))
                 .setConstantHeadingInterpolation(Math.toRadians(180))
                 .setZeroPowerAccelerationMultiplier(6.0)
@@ -148,6 +149,7 @@ public class SpecimenAuto extends LinearOpMode {
         collectSample3 = follower.pathBuilder()
                 .addBezierCurve(new Point(dropSamplePose2), new Point(new Pose(56, 14)), new Point(samplePose3))
                 .setConstantHeadingInterpolation(Math.toRadians(180))
+                .setZeroPowerAccelerationMultiplier(3.0)
                 .addBezierCurve(new Point(samplePose3), new Point(dropSamplePose3), new Point(dropSamplePose3))
                 .setConstantHeadingInterpolation(Math.toRadians(180))
                 .setZeroPowerAccelerationMultiplier(4.0)
@@ -168,7 +170,7 @@ public class SpecimenAuto extends LinearOpMode {
     public void autonomousPathUpdate() {
         switch (pathState) {
             case ScorePreload:
-                if (pathTimer.getElapsedTimeSeconds() >= 0.6) {
+                if (pathTimer.getElapsedTimeSeconds() >= 0.5) {
                     extension.goHighChamber();
                 }
                 if (!follower.isBusy()) {
@@ -185,12 +187,12 @@ public class SpecimenAuto extends LinearOpMode {
                 scoredSpecimens++;
 
                 if (scoredSpecimens == 1) {
-                    pivot.goDown();
+//                    pivot.goDown();
                     extension.goDown();
                     follower.followPath(collectSample1, false);
                     setPathState(PathState.CollectSample);
                 } else if (scoredSpecimens < 5) {
-                    pivot.goDown();
+//                    pivot.goDown();
                     extension.goDown();
 
                     if (scoredSpecimens == 2) {
@@ -213,18 +215,22 @@ public class SpecimenAuto extends LinearOpMode {
 //                }
                 break;
             case ScoreToPickup:
+                if (pathTimer.getElapsedTimeSeconds() >= 0.2) {
+                    pivot.goDown();
+                }
                 if(!follower.isBusy() && Pivot.angle <= 20 && pathTimer.getElapsedTimeSeconds() >= 0.3) {
                     setPathState(PathState.Pickup);
                 }
                 break;
             case Pickup:
                 double pickupTime = pathTimer.getElapsedTimeSeconds();
-                double waitTime = 0.1;
+                double waitTime = 0.2;
                 if (pickupTime >= waitTime && pickupTime <= waitTime + 0.3) {
                     extension.setTarget(Extension.LOWER_LIMIT + 4000);
                 } else if (waitTime + 0.8 < pickupTime && pickupTime <= waitTime + 0.9) {
                     gripper.close();
                 } else if (pickupTime > waitTime + 1.0) {
+
                     pivot.goUp();
 
                     if (scoredSpecimens == 1) {
@@ -240,7 +246,7 @@ public class SpecimenAuto extends LinearOpMode {
                 }
                 break;
             case PickupToScore:
-                if (Pivot.angle >= 50) {
+                if (Pivot.angle >= 60) {
                     extension.goHighChamber();
                 }
                 if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() >= 0.4) {
@@ -309,7 +315,6 @@ public class SpecimenAuto extends LinearOpMode {
         gripper.close();
 
         goToDefaultPosition = new GoToDefaultPosition(pivot);
-        pickUpSample = new PickUpSample(arm, gripper);
 
         Trigger pivotIsUp = new Trigger(() -> pivot.getAngle() >= 20);
         Trigger pivotIsDown = new Trigger(() -> pivot.getAngle() < 20);

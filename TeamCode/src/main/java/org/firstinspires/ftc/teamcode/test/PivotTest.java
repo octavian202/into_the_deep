@@ -27,7 +27,7 @@ public class PivotTest extends LinearOpMode {
         CommandScheduler.getInstance().reset();
 
         Arm arm = new Arm(hardwareMap);
-        arm.intakeOverSubmersible();
+        arm.intakeSpecimen();
 
         Pivot pivot = new Pivot(hardwareMap);
 
@@ -36,14 +36,6 @@ public class PivotTest extends LinearOpMode {
 
         while (opModeIsActive()) {
             CommandScheduler.getInstance().run();
-
-            if (gamepad1.triangle) {
-                pivot.resetAngleVertical();
-            }
-            if (gamepad1.circle) {
-                pivot.resetAngleHorizontal();
-
-            }
 
             telemetry.addData("angle", pivot.getAngle());
             telemetry.addData("target", Pivot.targetAngle);

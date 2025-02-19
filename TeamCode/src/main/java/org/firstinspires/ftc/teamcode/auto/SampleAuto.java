@@ -55,13 +55,13 @@ public class SampleAuto extends LinearOpMode {
 
     private final Pose startPose = new Pose(6.5, 111.5, Math.toRadians(-90));
 
-    private final Pose scorePose = new Pose(23, 128, Math.toRadians(-45));
+    private final Pose scorePose = new Pose(21, 127, Math.toRadians(-45));
 
-    private final Pose pickup1Pose = new Pose(30, 130, Math.toRadians(0));
+    private final Pose pickup1Pose = new Pose(23, 123.5, Math.toRadians(0));
 
-    private final Pose pickup2Pose = new Pose(30, 138, Math.toRadians(0));
+    private final Pose pickup2Pose = new Pose(23, 130, Math.toRadians(0));
 
-    private final Pose pickup3Pose = new Pose(32, 141, Math.toRadians(30));
+    private final Pose pickup3Pose = new Pose(25, 130.5, Math.toRadians(30));
 
     private final Pose parkPose = new Pose(52, -20, Math.toRadians(90));
 
@@ -73,7 +73,7 @@ public class SampleAuto extends LinearOpMode {
     public void buildPaths() {
 
         scorePreload = follower.pathBuilder()
-                .addBezierLine(new Point(startPose), new Point(scorePose))
+                .addBezierCurve(new Point(startPose), new Point(scorePose))
                 .setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading())
                 .build();
 
@@ -125,28 +125,25 @@ public class SampleAuto extends LinearOpMode {
                 break;
             case ExtendingScore: // e deja la basket si pivot sus, extensia se ridica
 
-                if (!extension.isBusy()) {
+                if (extension.getPosition() >= 45000) {
                     setPathState(PathState.Scoring);
                 }
 
-//                if (pathTimer.getElapsedTimeSeconds() <= 0.1) {
-//                    extension.setTarget(Extension.HIGH_BASKET);
-//                } else if (pathTimer.getElapsedTimeSeconds() >= 0.4 && !extension.isBusy()) {
-//                    setPathState(PathState.Scoring);
-//                }
                 break;
             case Scoring:
                 double scoringTime = pathTimer.getElapsedTimeSeconds();
-                if (scoringTime >= 0.4 && scoringTime <= 0.5) { // timp de cand a ajuns sus ca sa se invarta bratu
+                if (scoringTime <= 0.1) {
                     gripper.open();
-                } else if (0.7 < scoringTime) {
+                } else if (0.5 < scoringTime) {
                     scoredSamples++;
                     extension.goDown();
+                    gripper.turn(0);
+                    arm.intakeAuto();
                     setPathState(PathState.RetractingScore);
                 }
                 break;
             case RetractingScore:
-                if (extension.getPosition() <= 13000) { // in timp ce coboara incepe sa se miste catre sample uri
+                if (extension.getPosition() <= 50000) { // in timp ce coboara incepe sa se miste catre sample uri
                     if (scoredSamples == 1) {
                         follower.followPath(grabPickup1, true);
                     } else if (scoredSamples == 2) {
@@ -168,12 +165,12 @@ public class SampleAuto extends LinearOpMode {
             case BasketToPickup:
                 if (Pivot.angle <= 40) {
                     arm.intakeAuto();
+                    extension.setTarget(Extension.HORIZONTAL_LIMIT - 3000);
                     gripper.turn(0);
                     gripper.open();
                 }
 
                 if(!follower.isBusy() && Pivot.angle <= 20 && pathTimer.getElapsedTimeSeconds() >= 0.9) {
-                    extension.setTarget(Extension.HORIZONTAL_LIMIT - 3000);
                     if (scoredSamples == 3) {
                         gripper.turn(30);
                     } else {
@@ -190,9 +187,12 @@ public class SampleAuto extends LinearOpMode {
                     pickUpSample.schedule();
                 } else if (0.8 <= pickupTime && pickupTime < 0.9) {
                     extension.goDown();
-                } else if (1.0 <= pickupTime && pickupTime < 1.5) {
+                } else if (1.0 <= pickupTime && pickupTime < 1.3) {
                     pivot.goUp();
-                } else if (pickupTime >= 1.6) {
+                    if (Pivot.angle >= 70) {
+                        extension.goHighBasket();
+                    }
+                } else if (pickupTime >= 1.4) {
                     extension.goHighBasket();
                     setPathState(PathState.PickupToBasket);
                     if (scoredSamples == 1) {

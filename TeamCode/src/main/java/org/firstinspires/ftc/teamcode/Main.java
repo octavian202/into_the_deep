@@ -7,19 +7,22 @@ import com.arcrobotics.ftclib.command.button.Trigger;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.pedropathing.localization.Pose;
+import com.pedropathing.pathgen.BezierCurve;
+import com.pedropathing.pathgen.PathChain;
+import com.pedropathing.pathgen.Point;
+import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.auto.SpecimenAuto;
 import org.firstinspires.ftc.teamcode.commands.Ascend;
 import org.firstinspires.ftc.teamcode.commands.Drive;
-import org.firstinspires.ftc.teamcode.commands.DriveRobotCentric;
 import org.firstinspires.ftc.teamcode.commands.ExtendAscend;
 import org.firstinspires.ftc.teamcode.commands.GripperRoll;
 import org.firstinspires.ftc.teamcode.commands.ManualPivot;
 import org.firstinspires.ftc.teamcode.commands.PickUpSample;
 import org.firstinspires.ftc.teamcode.subsystems.Arm;
-import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
 import org.firstinspires.ftc.teamcode.subsystems.Extension;
 import org.firstinspires.ftc.teamcode.subsystems.Gripper;
 import org.firstinspires.ftc.teamcode.subsystems.PedroDrivetrain;
@@ -31,13 +34,131 @@ import java.util.function.Supplier;
 @TeleOp(name = "main", group = ".")
 public class Main extends LinearOpMode {
 
-//    private final Pose scorePose = new Pose(39, 70, Math.toRadians(180));
-//    private final Pose scoreControlPose1 = new Pose(23, 65, Math.toRadians(180));
-//    private final Pose scoreControlPose2 = new Pose(35, 73, Math.toRadians(180));
-//    private final Pose scoreControlPose3 = new Pose(35, 73, Math.toRadians(180));
-//    private final Pose startPose = new Pose(20, 27, Math.toRadians(180));
-//    private final Pose pickupPose = new Pose(22, 27, Math.toRadians(180));
-//    private final Pose pickupControlPose = new Pose(35, 27, Math.toRadians(180));
+    PedroDrivetrain pedroDrivetrain;
+    Pivot pivot;
+    Gripper gripper;
+    Arm arm;
+    Extension extension;
+    AutoState autoState;
+
+    Timer pathTimer = new Timer();
+
+    private final Pose scorePose = new Pose(38.5, 70, Math.toRadians(180));
+    private final Pose scoreControlPose1 = new Pose(23, 65, Math.toRadians(180));
+    private final Pose scoreControlPose2 = new Pose(35, 73, Math.toRadians(180));
+    private final Pose scoreControlPose3 = new Pose(35, 73, Math.toRadians(180));
+    private final Pose startPose = new Pose(22, 27, Math.toRadians(180));
+    private final Pose pickupPose = new Pose(22, 27, Math.toRadians(180));
+    private final Pose pickupControlPose = new Pose(35, 27, Math.toRadians(180));
+
+    private PathChain scorePreload, grabPickup, scorePickup;
+
+    private void buildPaths() {
+        scorePreload = pedroDrivetrain.follower.pathBuilder()
+                .addBezierLine(new Point(startPose), new Point(scorePose))
+                .setZeroPowerAccelerationMultiplier(4.0)
+                .setConstantHeadingInterpolation(startPose.getHeading())
+                .build();
+
+        grabPickup = pedroDrivetrain.follower.pathBuilder()
+                .addPath(new BezierCurve(new Point(scorePose), new Point(pickupControlPose), new Point(pickupPose)))
+                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .build();
+
+        scorePickup = pedroDrivetrain.follower.pathBuilder()
+                .addPath(new BezierCurve(new Point(pickupPose), new Point(scoreControlPose1), new Point(scoreControlPose2), new Point(scoreControlPose3), new Point(scorePose)))
+                .setZeroPowerAccelerationMultiplier(4.0)
+                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .build();
+    }
+
+    private void updateAuto() {
+        switch (autoState) {
+            case Manual:
+                pedroDrivetrain.follower.startTeleopDrive();
+                setPathState(AutoState.Nothing);
+
+                break;
+            case StartAuto:
+                gripper.close();
+                pedroDrivetrain.follower.setPose(startPose);
+                scorePreload = pedroDrivetrain.follower.pathBuilder()
+                        .addBezierLine(new Point(startPose), new Point(scorePose))
+                        .setZeroPowerAccelerationMultiplier(4.0)
+                        .setConstantHeadingInterpolation(startPose.getHeading())
+                        .build();
+                pedroDrivetrain.follower.followPath(scorePreload, false);
+                pedroDrivetrain.auto();
+                setPathState(AutoState.ScorePreload);
+
+                break;
+            case ScorePreload:
+                if (pathTimer.getElapsedTimeSeconds() >= 0.1) {
+                    pivot.goUp();
+//                    pedroDrivetrain.follower.followPath(scorePreload);
+                    grabPickup = pedroDrivetrain.follower.pathBuilder()
+                            .addPath(new BezierCurve(new Point(scorePose), new Point(pickupControlPose), new Point(pickupPose)))
+                            .setConstantHeadingInterpolation(Math.toRadians(180))
+                            .build();
+                    setPathState(AutoState.Score);
+                }
+
+                break;
+            case Score:
+                if (!pedroDrivetrain.follower.isBusy() && pathTimer.getElapsedTimeSeconds() >= 0.8) {
+                    gripper.open();
+                    extension.goDown();
+                    pivot.goDown();
+                    pedroDrivetrain.follower.followPath(grabPickup, true);
+                    setPathState(AutoState.ScoreToPickup);
+                }
+
+                break;
+            case ScoreToPickup:
+
+                if (pathTimer.getElapsedTimeSeconds() >= 1.0 && !pedroDrivetrain.follower.isBusy()) {
+                    scorePickup = pedroDrivetrain.follower.pathBuilder()
+                            .addPath(new BezierCurve(new Point(pickupPose), new Point(scoreControlPose1), new Point(scoreControlPose2), new Point(scoreControlPose3), new Point(scorePose)))
+                            .setZeroPowerAccelerationMultiplier(4.0)
+                            .setConstantHeadingInterpolation(Math.toRadians(180))
+                            .build();
+                    setPathState(AutoState.Pickup);
+                }
+
+                break;
+
+            case Pickup:
+                double pickupTime = pathTimer.getElapsedTimeSeconds();
+                double waitTime = 0.4;
+                if (pickupTime >= waitTime && pickupTime <= waitTime + 0.3) {
+                    extension.setTarget(Extension.LOWER_LIMIT + 4000);
+                } else if (waitTime + 0.8 < pickupTime && pickupTime <= waitTime + 0.9) {
+                    gripper.close();
+                } else if (pickupTime > waitTime + 1.0) {
+                    pivot.goUp();
+
+                    pedroDrivetrain.follower.followPath(scorePickup, false);
+                    setPathState(AutoState.Score);
+                }
+
+                break;
+        }
+    }
+
+    void setPathState(AutoState state) {
+        autoState = state;
+        pathTimer.resetTimer();
+    }
+
+    public enum AutoState {
+        ScorePreload,
+        Pickup,
+        Score,
+        ScoreToPickup,
+        Manual,
+        StartAuto,
+        Nothing
+    }
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -47,14 +168,18 @@ public class Main extends LinearOpMode {
         }
         CommandScheduler.getInstance().reset();
 
+        autoState = AutoState.Manual;
+
         GamepadEx gp1 = new GamepadEx(gamepad1);
         GamepadEx gp2 = new GamepadEx(gamepad2);
 
-        PedroDrivetrain pedroDrivetrain = new PedroDrivetrain(hardwareMap);
-        Pivot pivot = new Pivot(hardwareMap);
-        Extension extension = new Extension(hardwareMap);
-        Gripper gripper = new Gripper(hardwareMap);
-        Arm arm = new Arm(hardwareMap);
+        pedroDrivetrain = new PedroDrivetrain(hardwareMap);
+        pivot = new Pivot(hardwareMap);
+        extension = new Extension(hardwareMap);
+        gripper = new Gripper(hardwareMap);
+        arm = new Arm(hardwareMap);
+
+        buildPaths();
 
         Trigger pivotIsUp = new Trigger(() -> pivot.getAngle() >= 45);
         Trigger pivotIsDown = new Trigger(() -> pivot.getAngle() < 45);
@@ -115,6 +240,9 @@ public class Main extends LinearOpMode {
 
         gp2.getGamepadButton(GamepadKeys.Button.Y).and(pivotIsUp).and(retracted).whenActive(() -> extension.setTarget(8000));
 
+        gp1.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenPressed(() -> setPathState(AutoState.StartAuto));
+        gp1.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenPressed(() -> setPathState(AutoState.Manual));
+
         (new Trigger(() -> extension.isAscending)).whileActiveContinuous(arm::outtakeSpecimen);
 
         pivotIsUp.whenActive(extension::goHighChamber);
@@ -146,7 +274,7 @@ public class Main extends LinearOpMode {
         while (opModeIsActive()) {
             CommandScheduler.getInstance().run();
 
-
+            updateAuto();
 
 
             telemetry.addData("pos", extension.getPosition());
