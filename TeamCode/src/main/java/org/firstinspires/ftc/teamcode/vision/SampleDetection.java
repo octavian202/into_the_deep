@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Config
-public class SampleOrientationDetection implements VisionProcessor {
+public class SampleDetection implements VisionProcessor {
 
     public static Scalar lowerHSV = new Scalar(80, 50, 30); // Adjust these values
     public static Scalar upperHSV = new Scalar(140, 255, 255);
@@ -31,6 +31,7 @@ public class SampleOrientationDetection implements VisionProcessor {
     private Mat mask = new Mat();
     private Mat kernel = new Mat();
     private Mat hierarchy = new Mat();
+    private Point samplePoint = new Point();
 
 
     @Override
@@ -47,7 +48,7 @@ public class SampleOrientationDetection implements VisionProcessor {
             Core.inRange(hsv, lowerHSV, upperHSV, mask);
 
             // Morphological operations to reduce noise
-            kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5));
+            kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(10, 10));
             Imgproc.morphologyEx(mask, mask, Imgproc.MORPH_OPEN, kernel);
             Imgproc.morphologyEx(mask, mask, Imgproc.MORPH_CLOSE, kernel);
 
@@ -82,6 +83,14 @@ public class SampleOrientationDetection implements VisionProcessor {
                 detectedAngle = (90 + ellipse.angle) % 180;
                 Imgproc.putText(input, "Angle: " + String.format("%.2f", detectedAngle),
                         new Point(10, 30), Imgproc.FONT_HERSHEY_SIMPLEX, 0.7, new Scalar(255, 255, 255), 2);
+
+                Point center = ellipse.center;
+                double relativeX = center.x - (input.width() / 2.0);
+                double relativeY = center.y - (input.height() / 2.0);
+                double normX = relativeX / (input.width() / 2.0);
+                double normY = relativeY / (input.height() / 2.0);
+                samplePoint.set(new double[]{normX, normY});
+
             } else {
                 detectedAngle = -1;
             }
@@ -96,11 +105,13 @@ public class SampleOrientationDetection implements VisionProcessor {
     }
 
     @Override
-    public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight, float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {
-
-    }
+    public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight, float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {}
 
     public double getDetectedAngle() {
         return detectedAngle - 90;
+    }
+
+    public Point getSampleCenter() {
+        return samplePoint;
     }
 }

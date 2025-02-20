@@ -57,7 +57,7 @@ public class Solo extends LinearOpMode {
 
         pivot.resetAngleVertical();
 
-        gp.getGamepadButton(GamepadKeys.Button.B).and(new Trigger(() -> extension.getPosition() <= 10000)).whenActive(new ConditionalCommand(
+        gp.getGamepadButton(GamepadKeys.Button.B).and(new Trigger(() -> extension.getTarget() <= 13000)).whenActive(new ConditionalCommand(
                 new InstantCommand(pivot::goDown, pivot),
                 new InstantCommand(pivot::goUp, pivot),
                 () -> pivot.getAngle() >= 45

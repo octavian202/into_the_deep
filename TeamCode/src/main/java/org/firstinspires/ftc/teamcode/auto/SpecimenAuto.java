@@ -52,26 +52,24 @@ public class SpecimenAuto extends LinearOpMode {
 
 
 
-    private final Pose scorePose = new Pose(38, 70, Math.toRadians(180));
+    private final Pose scorePose = new Pose(37.5, 70, Math.toRadians(180));
     private final Pose scoreControlPose1 = new Pose(23, 65, Math.toRadians(180));
     private final Pose scoreControlPose2 = new Pose(35, 73, Math.toRadians(180));
     private final Pose scoreControlPose3 = new Pose(35, 73, Math.toRadians(180));
 
-
-
     private final Pose pickupPose = new Pose(21, 27, Math.toRadians(180));
     private final Pose pickupControlPose = new Pose(35, 27, Math.toRadians(180));
 
-    private final Pose parkPose = new Pose(10, 27, Math.toRadians(90));
+    private final Pose parkPose = new Pose(20, 70, Math.toRadians(0));
 //    private final Pose parkControlPose = new Pose(4, -42, Math.toRadians(90));
 
     private final Pose dropSamplePose1 = new Pose(28, 26, Math.toRadians(180));
     private final Pose dropSamplePose2 = new Pose(28, 14, Math.toRadians(180));
     private final Pose dropSamplePose3 = new Pose(19, 9, Math.toRadians(180));
 
-    private final Pose samplePose1 = new Pose(60, 26, Math.toRadians(180));
-    private final Pose samplePose2 = new Pose(60, 14, Math.toRadians(180));
-    private final Pose samplePose3 = new Pose(60, 9, Math.toRadians(180));
+    private final Pose samplePose1 = new Pose(56, 26, Math.toRadians(180));
+    private final Pose samplePose2 = new Pose(56, 14, Math.toRadians(180));
+    private final Pose samplePose3 = new Pose(56, 9, Math.toRadians(180));
 
 
     private PathChain scorePreload, park;
@@ -300,6 +298,8 @@ public class SpecimenAuto extends LinearOpMode {
         pathTimer = new Timer();
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
+
+//        follower = new Follower(hardwareMap, FConstants.class, LConstants.class);
 
         Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);

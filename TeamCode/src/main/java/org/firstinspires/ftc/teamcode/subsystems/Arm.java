@@ -32,6 +32,11 @@ public class Arm extends SubsystemBase {
         wrist.setPosition(0.97);
     }
 
+    public void intakeSubmersibleAuto() {
+        arm.setPosition(0.7);
+        wrist.setPosition(0.91);
+    }
+
     public void intakeSample() {
         arm.setPosition(0.26);
         wrist.setPosition(0.97);

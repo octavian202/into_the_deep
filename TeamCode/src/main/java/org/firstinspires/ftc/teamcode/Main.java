@@ -43,12 +43,13 @@ public class Main extends LinearOpMode {
 
     Timer pathTimer = new Timer();
 
-    private final Pose scorePose = new Pose(38.5, 70, Math.toRadians(180));
+    private final Pose startPose = new Pose(20, 27, Math.toRadians(180));
+    private final Pose scorePose = new Pose(37.5, 70, Math.toRadians(180));
     private final Pose scoreControlPose1 = new Pose(23, 65, Math.toRadians(180));
     private final Pose scoreControlPose2 = new Pose(35, 73, Math.toRadians(180));
     private final Pose scoreControlPose3 = new Pose(35, 73, Math.toRadians(180));
-    private final Pose startPose = new Pose(22, 27, Math.toRadians(180));
-    private final Pose pickupPose = new Pose(22, 27, Math.toRadians(180));
+
+    private final Pose pickupPose = new Pose(21, 27, Math.toRadians(180));
     private final Pose pickupControlPose = new Pose(35, 27, Math.toRadians(180));
 
     private PathChain scorePreload, grabPickup, scorePickup;
@@ -195,7 +196,7 @@ public class Main extends LinearOpMode {
         gp1.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(pivot::resetAngleHorizontal);
         pivot.resetAngleVertical();
 
-        gp2.getGamepadButton(GamepadKeys.Button.B).and(new Trigger(() -> extension.getPosition() <= 10000)).whenActive(new ConditionalCommand(
+        gp2.getGamepadButton(GamepadKeys.Button.B).and(new Trigger(() -> extension.getTarget() <= 13000)).whenActive(new ConditionalCommand(
                 new InstantCommand(pivot::goDown, pivot),
                 new InstantCommand(pivot::goUp, pivot),
                 () -> pivot.getAngle() >= 45
