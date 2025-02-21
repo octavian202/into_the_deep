@@ -10,6 +10,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.teamcode.subsystems.Arm;
+import org.firstinspires.ftc.teamcode.subsystems.Gripper;
 import org.firstinspires.ftc.teamcode.vision.SampleCamera;
 import org.firstinspires.ftc.teamcode.vision.SampleDetection;
 import org.firstinspires.ftc.vision.VisionPortal;
@@ -28,9 +30,17 @@ public class CameraTest extends LinearOpMode {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
 
+        CommandScheduler.getInstance().reset();
+
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+        Arm arm = new Arm(hardwareMap);
+        Gripper gripper = new Gripper(hardwareMap);
+
+        arm.intakeSubmersibleAuto();
+        gripper.turn(0);
 
         SampleCamera sampleCamera = new SampleCamera(hardwareMap);
+        sampleCamera.resumeReading();
 
         while (opModeInInit()) {
             CommandScheduler.getInstance().run();

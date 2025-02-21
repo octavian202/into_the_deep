@@ -43,7 +43,7 @@ public class Main extends LinearOpMode {
 
     Timer pathTimer = new Timer();
 
-    private final Pose startPose = new Pose(20, 27, Math.toRadians(180));
+    private final Pose startPose = new Pose(20, 28, Math.toRadians(180));
     private final Pose scorePose = new Pose(37.5, 70, Math.toRadians(180));
     private final Pose scoreControlPose1 = new Pose(23, 65, Math.toRadians(180));
     private final Pose scoreControlPose2 = new Pose(35, 73, Math.toRadians(180));

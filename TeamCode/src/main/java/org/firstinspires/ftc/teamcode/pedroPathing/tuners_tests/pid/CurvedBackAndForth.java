@@ -13,8 +13,7 @@ import com.pedropathing.pathgen.BezierCurve;
 import com.pedropathing.pathgen.Path;
 import com.pedropathing.pathgen.Point;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.constants.FConstants;
-import org.firstinspires.ftc.teamcode.pedroPathing.constants.LConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.constants.*;
 
 /**
  * This is the CurvedBackAndForth autonomous OpMode. It runs the robot in a specified distance
@@ -49,7 +48,8 @@ public class CurvedBackAndForth extends OpMode {
      */
     @Override
     public void init() {
-        follower = new Follower(hardwareMap, FConstants.class, LConstants.class);
+        Constants.setConstants(FConstants.class, LConstants.class);
+        follower = new Follower(hardwareMap);
 
 //        Constants.setConstants(FConstants.class, LConstants.class);
 //        follower = new Follower(hardwareMap)

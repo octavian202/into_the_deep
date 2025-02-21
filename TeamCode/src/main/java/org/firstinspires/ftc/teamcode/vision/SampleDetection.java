@@ -22,9 +22,9 @@ import java.util.List;
 @Config
 public class SampleDetection implements VisionProcessor {
 
-    public static Scalar lowerHSV = new Scalar(80, 50, 30); // Adjust these values
-    public static Scalar upperHSV = new Scalar(140, 255, 255);
-    private double detectedAngle = -1;
+    public static Scalar lowerHSV = new Scalar(10, 30, 5); // Adjust these values
+    public static Scalar upperHSV = new Scalar(100, 355, 355);
+    private double detectedAngle = -90;
     private Mat processedMat = new Mat();
     Mat finalMat = new Mat();
     private Mat hsv = new Mat();
@@ -92,7 +92,7 @@ public class SampleDetection implements VisionProcessor {
                 samplePoint.set(new double[]{normX, normY});
 
             } else {
-                detectedAngle = -1;
+                detectedAngle = -90;
             }
 
             // Return processed frame for viewing

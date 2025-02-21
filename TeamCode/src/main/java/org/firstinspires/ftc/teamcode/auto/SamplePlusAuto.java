@@ -4,6 +4,7 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.command.CommandScheduler;
 import com.arcrobotics.ftclib.command.button.Trigger;
+import com.arcrobotics.ftclib.controller.PIDFController;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.localization.Pose;
 import com.pedropathing.pathgen.BezierLine;
@@ -32,6 +33,11 @@ import java.util.List;
 @Autonomous(name = "sample+ auto", group = ".")
 public class SamplePlusAuto extends LinearOpMode {
 
+
+    public static double TURN_KP = 1.4, TURN_KD = 0.0, TURN_KF = 0.0;
+    public static double EXTENSION_KP = 1.4, EXTENSION_KD = 0.0, EXTENSION_KF = 0.0;
+    public static double DISTANCE = 600;
+    PIDFController turnPIDF, extensionPIDF;
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
     private Telemetry telemetryA;
@@ -66,7 +72,7 @@ public class SamplePlusAuto extends LinearOpMode {
 
     private final Pose parkControlPose = new Pose(52, -20, Math.toRadians(90));
 
-    private final Pose submersiblePose = new Pose(65, 96, Math.toRadians(-90));
+    private final Pose submersiblePose = new Pose(65, 100, Math.toRadians(-90));
     private final Pose submersibleControlPose = new Pose(65, 120);
 
     private PathChain scorePreload, park;
@@ -163,6 +169,11 @@ public class SamplePlusAuto extends LinearOpMode {
                     } else if (scoredSamples == 3) {
                         follower.followPath(grabPickup3, true);
                     } else {
+                        submersiblePickup = follower.pathBuilder()
+                                .addBezierCurve(new Point(scorePose), new Point(submersibleControlPose), new Point(submersiblePose))
+                                .setLinearHeadingInterpolation(scorePose.getHeading(), submersiblePose.getHeading())
+                                .build();
+
                         follower.followPath(submersiblePickup, false);
                     }
 //                    else {
@@ -203,7 +214,7 @@ public class SamplePlusAuto extends LinearOpMode {
                     extension.goDown();
                 } else if (1.0 <= pickupTime && pickupTime < 1.3) {
                     pivot.goUp();
-                    if (Pivot.angle >= 70) {
+                    if (Pivot.angle >= 90) {
                         extension.goHighBasket();
                     }
                 } else if (pickupTime >= 1.4) {
@@ -215,11 +226,18 @@ public class SamplePlusAuto extends LinearOpMode {
                         follower.followPath(scorePickup2, true);
                     } else if (scoredSamples == 3) {
                         follower.followPath(scorePickup3, true);
+                    } else {
+                        follower.followPath(scoreSubmersiblePickup, true);
+                        scoreSubmersiblePickup = follower.pathBuilder()
+                                .addBezierCurve(new Point(submersiblePose), new Point(submersibleControlPose), new Point(scorePose))
+                                .setLinearHeadingInterpolation(submersiblePose.getHeading(), scorePose.getHeading())
+                                .build();
+
                     }
                 }
                 break;
             case PickupToBasket:
-                if (Pivot.angle >= 80) {
+                if (Pivot.angle >= 90) {
                     extension.goHighBasket();
                     if(!follower.isBusy()) {
                         setPathState(SamplePlusAuto.PathState.ExtendingScore);
@@ -231,13 +249,13 @@ public class SamplePlusAuto extends LinearOpMode {
             case ScoreToSubmersible:
                 if (Pivot.angle <= 40) {
                     arm.intakeSubmersibleAuto();
-                    extension.setTarget(Extension.LOWER_LIMIT + 4000);
+                    extension.setTarget(Extension.LOWER_LIMIT + 8000);
                     gripper.turn(0);
                     gripper.open();
+                    camera.resumeReading();
                 }
 
                 if(!follower.isBusy() && Pivot.angle <= 20 && pathTimer.getElapsedTimeSeconds() >= 0.9) {
-                    camera.resumeReading();
                     setPathState(PathState.Collecting);
                 }
 
@@ -245,20 +263,27 @@ public class SamplePlusAuto extends LinearOpMode {
 
             case Collecting:
 
-                gripper.turn(camera.getOrientation());
+                if (pathTimer.getElapsedTimeSeconds() >= 0.3) {
+                    org.opencv.core.Point sample = camera.getPosition();
+                    double distanceFromCenter = sample.x * sample.x + sample.y * sample.y;
+                    if (distanceFromCenter <= 0.1 && (sample.x != 0.0 && sample.y != 0.0 && camera.getOrientation() != 0.0)) {
+                        gripper.turn(camera.getOrientation());
+                        follower.holdPoint(follower.getPose());
+//                        camera.stopReading();
+                        setPathState(PathState.Pickup);
+                        camera.clearData();
+                    } else {
+//                        telemetry.addData("reading", camera.reading);
+//                        telemetry.addData("orientation", camera.getOrientation());
+//                        telemetry.addData("point", sample.toString());
+//                        telemetry.update();
 
-                org.opencv.core.Point sample = camera.getPosition();
-                double distanceFromCenter = sample.x * sample.x + sample.y * sample.y;
-                if (distanceFromCenter <= 0.05) {
-                    camera.stopReading();
-                    setPathState(PathState.Pickup);
-                } else {
-                    telemetry.addData("orientation", camera.getOrientation());
-                    telemetry.addData("point", sample.toString());
-                    telemetry.update();
+                        double angleTarget = turnPIDF.calculate(0, Math.toRadians(sample.x * 25.0));
+                        double extensionTarget = extension.getPosition() + extensionPIDF.calculate(extension.getPosition(), extension.getPosition() + sample.y * DISTANCE);
 
-                    follower.turn(Math.toRadians(sample.y * 8.0), true);
-                    extension.setTarget((int)(extension.getPosition() - sample.x * 200.0));
+                        follower.turn(angleTarget, true);
+                        extension.setTarget((int)extensionTarget);
+                    }
                 }
 
                 break;
@@ -290,6 +315,9 @@ public class SamplePlusAuto extends LinearOpMode {
         pathTimer = new Timer();
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
+
+        turnPIDF = new PIDFController(TURN_KP, 0D, TURN_KD, TURN_KF);
+        extensionPIDF = new PIDFController(EXTENSION_KP, 0D, EXTENSION_KD, EXTENSION_KF);
 
 //        follower = new Follower(hardwareMap, FConstants.class, LConstants.class);
 
@@ -346,8 +374,11 @@ public class SamplePlusAuto extends LinearOpMode {
                     .setLinearHeadingInterpolation(follower.getPose().getHeading(), parkPose.getHeading())
                     .build();
                 follower.followPath(park);
-                extension.goDown();
-                pivot.goUp();
+
+                if (opmodeTimer.getElapsedTimeSeconds() >= 29.0) {
+                    extension.goDown();
+                    pivot.goUp();
+                }
             }
 
             follower.telemetryDebug(telemetryA);

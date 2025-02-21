@@ -16,7 +16,6 @@ import org.opencv.core.Point;
 public class SampleCamera extends SubsystemBase {
     public static double COOLDOWN = 0.05;
 
-    ColorBlobLocatorProcessor colorBlobLocatorProcessor;
     SampleDetection sampleDetection;
     VisionPortal visionPortal;
 
@@ -24,7 +23,7 @@ public class SampleCamera extends SubsystemBase {
     private double orientation = 0d;
 
     Timer timer = new Timer();
-    private boolean reading = false;
+    public boolean reading = false;
 
     public SampleCamera(HardwareMap hardwareMap) {
 
@@ -37,29 +36,30 @@ public class SampleCamera extends SubsystemBase {
                 .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
                 .build();
 
-        stopReading();
-
+        resumeReading();
+//        reading = true;
     }
 
     @Override
     public void periodic() {
-        if (reading && timer.getElapsedTimeSeconds() >= COOLDOWN) {
+        if (reading) {
             timer.resetTimer();
             orientation = sampleDetection.getDetectedAngle();
             center = sampleDetection.getSampleCenter();
         }
     }
 
+    public void clearData() {
+        orientation = 0d;
+        center = new Point(0d, 0d);
+    }
+
     public void resumeReading() {
         reading = true;
-        visionPortal.resumeStreaming();
-        visionPortal.resumeLiveView();
     }
 
     public void stopReading() {
         reading = false;
-        visionPortal.stopLiveView();
-        visionPortal.stopStreaming();
     }
 
     public double getOrientation() {
