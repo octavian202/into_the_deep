@@ -44,7 +44,7 @@ public class Main extends LinearOpMode {
     Timer pathTimer = new Timer();
 
     private final Pose startPose = new Pose(20, 28, Math.toRadians(180));
-    private final Pose scorePose = new Pose(37.5, 70, Math.toRadians(180));
+    private final Pose scorePose = new Pose(38, 70, Math.toRadians(180));
     private final Pose scoreControlPose1 = new Pose(23, 65, Math.toRadians(180));
     private final Pose scoreControlPose2 = new Pose(35, 73, Math.toRadians(180));
     private final Pose scoreControlPose3 = new Pose(35, 73, Math.toRadians(180));
@@ -196,6 +196,8 @@ public class Main extends LinearOpMode {
         gp1.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(pivot::resetAngleHorizontal);
         pivot.resetAngleVertical();
 
+        gp1.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenPressed(pedroDrivetrain::revert);
+
         gp2.getGamepadButton(GamepadKeys.Button.B).and(new Trigger(() -> extension.getTarget() <= 13000)).whenActive(new ConditionalCommand(
                 new InstantCommand(pivot::goDown, pivot),
                 new InstantCommand(pivot::goUp, pivot),
@@ -239,10 +241,10 @@ public class Main extends LinearOpMode {
         gp2.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(new ExtendAscend(extension));
         gp2.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(new Ascend(extension));
 
-        gp2.getGamepadButton(GamepadKeys.Button.Y).and(pivotIsUp).and(retracted).whenActive(() -> extension.setTarget(8000));
+        gp2.getGamepadButton(GamepadKeys.Button.Y).and(pivotIsUp).and(retracted).whenActive(extension::goDown);
 
-        gp1.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenPressed(() -> setPathState(AutoState.StartAuto));
-        gp1.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenPressed(() -> setPathState(AutoState.Manual));
+//        gp1.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenPressed(() -> setPathState(AutoState.StartAuto));
+//        gp1.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenPressed(() -> setPathState(AutoState.Manual));
 
         (new Trigger(() -> extension.isAscending)).whileActiveContinuous(arm::outtakeSpecimen);
 

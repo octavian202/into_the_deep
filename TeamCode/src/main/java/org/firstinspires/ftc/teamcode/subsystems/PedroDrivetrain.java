@@ -12,6 +12,7 @@ public class PedroDrivetrain extends SubsystemBase {
 
     public Follower follower;
     public final Pose startPose = new Pose(0, 0, 0);
+    private double reverted = 1;
 
     public PedroDrivetrain(HardwareMap hardwareMap) {
         Constants.setConstants(FConstants.class, LConstants.class);
@@ -21,13 +22,17 @@ public class PedroDrivetrain extends SubsystemBase {
         follower.startTeleopDrive();
     }
 
+    public void revert() {
+        reverted = -reverted;
+    }
+
     @Override
     public void periodic() {
         follower.update();
     }
 
     public void drive(double x, double y, double rx) {
-        follower.setTeleOpMovementVectors(y, -x, -rx);
+        follower.setTeleOpMovementVectors(y * reverted, -x * reverted, -rx);
     }
 
     public void auto() {

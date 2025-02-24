@@ -31,7 +31,7 @@ import java.util.List;
 //import pedroPathing.constants.LConstants;
 
 @Config
-@Autonomous(name = "camera auto test", group = ".")
+@Autonomous(name = "camera auto test", group = "test")
 public class CameraAutoTest extends LinearOpMode {
 
     public static double TURN_KP = 1.4, TURN_KD = 0.0, TURN_KF = 0.0;
