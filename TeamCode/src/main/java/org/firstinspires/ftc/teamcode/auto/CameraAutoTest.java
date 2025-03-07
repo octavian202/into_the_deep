@@ -33,10 +33,7 @@ import java.util.List;
 @Config
 @Autonomous(name = "camera auto test", group = "test")
 public class CameraAutoTest extends LinearOpMode {
-
-    public static double TURN_KP = 1.4, TURN_KD = 0.0, TURN_KF = 0.0;
-    public static double EXTENSION_KP = 1.4, EXTENSION_KD = 0.0, EXTENSION_KF = 0.0;
-    public static double DISTANCE = 600;
+    public static double DISTANCE = 500, ANGLE = 40.0;
     PIDFController turnPIDF, extensionPIDF;
 
     private Follower follower;
@@ -115,25 +112,31 @@ public class CameraAutoTest extends LinearOpMode {
 
             case Collecting:
 
-                if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
+                if (pathTimer.getElapsedTimeSeconds() >= 0.1) {
                     org.opencv.core.Point sample = camera.getPosition();
                     double distanceFromCenter = sample.x * sample.x + sample.y * sample.y;
                     if (distanceFromCenter <= 0.1 && (sample.x != 0.0 && sample.y != 0.0 && camera.getOrientation() != 0.0)) {
-                        gripper.turn(camera.getOrientation());
+//                        gripper.turn(camera.getOrientation());
                         follower.holdPoint(follower.getPose());
+                        extension.setTarget(extension.getPosition());
 //                        camera.stopReading();
-                        setPathState(PathState.Pickup);
+//                        setPathState(PathState.Pickup);
                     } else {
                         telemetry.addData("reading", camera.reading);
                         telemetry.addData("orientation", camera.getOrientation());
                         telemetry.addData("point", sample.toString());
                         telemetry.update();
 
-                        double angleTarget = turnPIDF.calculate(0, Math.toRadians(sample.x * 25.0));
-                        double extensionTarget = extension.getPosition() + extensionPIDF.calculate(extension.getPosition(), extension.getPosition() + sample.y * DISTANCE);
+//                        double angleTarget = turnPIDF.calculate(0, Math.toRadians(sample.x * 15.0));
+//                        int extensionTarget = ()extensionPIDF.calculate(extension.getPosition(), extension.getPosition() + sample.y * DISTANCE);
+
+                        double angleTarget = Math.toRadians(ANGLE) * sample.x;
+                        double extensionTarget = extension.getPosition() + sample.y * DISTANCE;
 
                         follower.turn(angleTarget, true);
                         extension.setTarget((int)extensionTarget);
+
+                        setPathState(PathState.Collecting);
                     }
                 }
                 break;
@@ -159,10 +162,6 @@ public class CameraAutoTest extends LinearOpMode {
         }
 
         CommandScheduler.getInstance().reset();
-
-
-        turnPIDF = new PIDFController(TURN_KP, 0D, TURN_KD, TURN_KF);
-        extensionPIDF = new PIDFController(EXTENSION_KP, 0D, EXTENSION_KD, EXTENSION_KF);
 
         telemetryA = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
 
@@ -218,9 +217,6 @@ public class CameraAutoTest extends LinearOpMode {
         setPathState(PathState.Start);
 
         while (opModeIsActive()) {
-
-            turnPIDF.setPIDF(TURN_KP, 0D, TURN_KD, TURN_KF);
-            extensionPIDF.setPIDF(EXTENSION_KP, 0D, EXTENSION_KD, EXTENSION_KF);
 
             CommandScheduler.getInstance().run();
 

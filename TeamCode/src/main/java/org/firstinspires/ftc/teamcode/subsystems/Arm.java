@@ -62,6 +62,11 @@ public class Arm extends SubsystemBase {
         wrist.setPosition(0.65);
     }
 
+    public void hang() {
+        arm.setPosition(0.6);
+        wrist.setPosition(0.36);
+    }
+
     public void set(double armPos, double wristPos) {
         arm.setPosition(armPos);
         wrist.setPosition(wristPos);

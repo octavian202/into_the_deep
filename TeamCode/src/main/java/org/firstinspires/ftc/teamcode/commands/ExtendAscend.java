@@ -10,7 +10,7 @@ public class ExtendAscend extends SequentialCommandGroup {
 
     public ExtendAscend(Extension extension) {
         addCommands(
-                new InstantCommand(() -> extension.setTarget(27000)),
+                new InstantCommand(() -> extension.setTarget(29000)),
                 new WaitCommand(1000),
                 new InstantCommand(extension::engageAscend),
                 new WaitCommand(2000)

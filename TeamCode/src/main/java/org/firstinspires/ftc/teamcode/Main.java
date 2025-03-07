@@ -43,31 +43,25 @@ public class Main extends LinearOpMode {
 
     Timer pathTimer = new Timer();
 
-    private final Pose startPose = new Pose(20, 28, Math.toRadians(180));
-    private final Pose scorePose = new Pose(38, 70, Math.toRadians(180));
-    private final Pose scoreControlPose1 = new Pose(23, 65, Math.toRadians(180));
-    private final Pose scoreControlPose2 = new Pose(35, 73, Math.toRadians(180));
-    private final Pose scoreControlPose3 = new Pose(35, 73, Math.toRadians(180));
+    private final Pose scorePose = new Pose(37.5, 65, Math.toRadians(180));
+    private final Pose scoreControlPose1 = new Pose(22, 60, Math.toRadians(180));
+    private final Pose scoreControlPose2 = new Pose(38, 65, Math.toRadians(180));
 
-    private final Pose pickupPose = new Pose(21, 27, Math.toRadians(180));
-    private final Pose pickupControlPose = new Pose(35, 27, Math.toRadians(180));
+    private final Pose pickupPose = new Pose(18, 33, Math.toRadians(180));
+    private final Pose pickupControlPose1 = new Pose(35, 65);
+    private final Pose pickupControlPose2 = new Pose(30, 33);
 
-    private PathChain scorePreload, grabPickup, scorePickup;
+    private PathChain grabPickup, scorePickup;
 
     private void buildPaths() {
-        scorePreload = pedroDrivetrain.follower.pathBuilder()
-                .addBezierLine(new Point(startPose), new Point(scorePose))
-                .setZeroPowerAccelerationMultiplier(4.0)
-                .setConstantHeadingInterpolation(startPose.getHeading())
-                .build();
 
         grabPickup = pedroDrivetrain.follower.pathBuilder()
-                .addPath(new BezierCurve(new Point(scorePose), new Point(pickupControlPose), new Point(pickupPose)))
+                .addPath(new BezierCurve(new Point(scorePose), new Point(pickupControlPose1), new Point(pickupControlPose2), new Point(pickupPose)))
                 .setConstantHeadingInterpolation(Math.toRadians(180))
                 .build();
 
         scorePickup = pedroDrivetrain.follower.pathBuilder()
-                .addPath(new BezierCurve(new Point(pickupPose), new Point(scoreControlPose1), new Point(scoreControlPose2), new Point(scoreControlPose3), new Point(scorePose)))
+                .addPath(new BezierCurve(new Point(pickupPose), new Point(scoreControlPose1), new Point(scoreControlPose2), new Point(scorePose)))
                 .setZeroPowerAccelerationMultiplier(4.0)
                 .setConstantHeadingInterpolation(Math.toRadians(180))
                 .build();
@@ -82,44 +76,39 @@ public class Main extends LinearOpMode {
                 break;
             case StartAuto:
                 gripper.close();
-                pedroDrivetrain.follower.setPose(startPose);
-                scorePreload = pedroDrivetrain.follower.pathBuilder()
-                        .addBezierLine(new Point(startPose), new Point(scorePose))
+                pedroDrivetrain.follower.setPose(pickupPose);
+                scorePickup = pedroDrivetrain.follower.pathBuilder()
+                        .addPath(new BezierCurve(new Point(pickupPose), new Point(scoreControlPose1), new Point(scoreControlPose2), new Point(scorePose)))
                         .setZeroPowerAccelerationMultiplier(4.0)
-                        .setConstantHeadingInterpolation(startPose.getHeading())
+                        .setConstantHeadingInterpolation(Math.toRadians(180))
                         .build();
-                pedroDrivetrain.follower.followPath(scorePreload, false);
+                pedroDrivetrain.follower.followPath(scorePickup, false);
                 pedroDrivetrain.auto();
-                setPathState(AutoState.ScorePreload);
-
-                break;
-            case ScorePreload:
-                if (pathTimer.getElapsedTimeSeconds() >= 0.1) {
-                    pivot.goUp();
-//                    pedroDrivetrain.follower.followPath(scorePreload);
-                    grabPickup = pedroDrivetrain.follower.pathBuilder()
-                            .addPath(new BezierCurve(new Point(scorePose), new Point(pickupControlPose), new Point(pickupPose)))
-                            .setConstantHeadingInterpolation(Math.toRadians(180))
-                            .build();
-                    setPathState(AutoState.Score);
-                }
+                setPathState(AutoState.Pickup);
 
                 break;
             case Score:
                 if (!pedroDrivetrain.follower.isBusy() && pathTimer.getElapsedTimeSeconds() >= 0.8) {
                     gripper.open();
                     extension.goDown();
-                    pivot.goDown();
+
+                    grabPickup = pedroDrivetrain.follower.pathBuilder()
+                            .addPath(new BezierCurve(new Point(scorePose), new Point(pickupControlPose1), new Point(pickupControlPose2), new Point(pickupPose)))
+                            .setConstantHeadingInterpolation(Math.toRadians(180))
+                            .build();
                     pedroDrivetrain.follower.followPath(grabPickup, true);
                     setPathState(AutoState.ScoreToPickup);
                 }
 
                 break;
             case ScoreToPickup:
+                if (pathTimer.getElapsedTimeSeconds() >= 0.3) {
+                    pivot.goDown();
+                }
 
                 if (pathTimer.getElapsedTimeSeconds() >= 1.0 && !pedroDrivetrain.follower.isBusy()) {
                     scorePickup = pedroDrivetrain.follower.pathBuilder()
-                            .addPath(new BezierCurve(new Point(pickupPose), new Point(scoreControlPose1), new Point(scoreControlPose2), new Point(scoreControlPose3), new Point(scorePose)))
+                            .addPath(new BezierCurve(new Point(pickupPose), new Point(scoreControlPose1), new Point(scoreControlPose2), new Point(scorePose)))
                             .setZeroPowerAccelerationMultiplier(4.0)
                             .setConstantHeadingInterpolation(Math.toRadians(180))
                             .build();
@@ -129,15 +118,10 @@ public class Main extends LinearOpMode {
                 break;
 
             case Pickup:
-                double pickupTime = pathTimer.getElapsedTimeSeconds();
-                double waitTime = 0.4;
-                if (pickupTime >= waitTime && pickupTime <= waitTime + 0.3) {
-                    extension.setTarget(Extension.LOWER_LIMIT + 4000);
-                } else if (waitTime + 0.8 < pickupTime && pickupTime <= waitTime + 0.9) {
+                if (pathTimer.getElapsedTimeSeconds() >= 0.1 && pathTimer.getElapsedTimeSeconds() < 0.2) {
                     gripper.close();
-                } else if (pickupTime > waitTime + 1.0) {
+                } else if (pathTimer.getElapsedTimeSeconds() >= 0.2) {
                     pivot.goUp();
-
                     pedroDrivetrain.follower.followPath(scorePickup, false);
                     setPathState(AutoState.Score);
                 }
@@ -243,10 +227,11 @@ public class Main extends LinearOpMode {
 
         gp2.getGamepadButton(GamepadKeys.Button.Y).and(pivotIsUp).and(retracted).whenActive(extension::goDown);
 
+
 //        gp1.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenPressed(() -> setPathState(AutoState.StartAuto));
 //        gp1.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenPressed(() -> setPathState(AutoState.Manual));
 
-        (new Trigger(() -> extension.isAscending)).whileActiveContinuous(arm::outtakeSpecimen);
+        (new Trigger(() -> extension.isAscending)).whileActiveContinuous(arm::hang);
 
         pivotIsUp.whenActive(extension::goHighChamber);
         pivotIsDown.whenActive(extension::goDown);
@@ -261,7 +246,7 @@ public class Main extends LinearOpMode {
 //        pivotIsUp.and(new Trigger(() -> extension.isBusy() && extension.getTarget() >= 10000)).whenActive(arm::idle);
 
         pivotIsUp.and(retracted).whenActive(arm::outtakeSpecimen);
-        pivotIsUp.and(retracted).whenActive(() -> gripper.turn(180));
+        pivotIsUp.and(retracted).whenActive(() -> gripper.turn(186));
 
         pivotIsDown.and(extended).whenActive(arm::intakeOverSubmersible);
         pivotIsDown.and(extended).whenActive(gripper::open);

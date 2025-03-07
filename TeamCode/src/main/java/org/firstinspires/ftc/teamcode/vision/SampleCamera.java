@@ -46,6 +46,11 @@ public class SampleCamera extends SubsystemBase {
             timer.resetTimer();
             orientation = sampleDetection.getDetectedAngle();
             center = sampleDetection.getSampleCenter();
+
+            center.y = Math.max(center.y, -1.0);
+            center.y = Math.min(center.y, 1.0);
+            center.x = Math.max(center.x, -1.0);
+            center.x = Math.min(center.x, 1.0);
         }
     }
 

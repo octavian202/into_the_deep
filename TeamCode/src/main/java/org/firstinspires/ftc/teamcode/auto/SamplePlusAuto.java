@@ -33,10 +33,7 @@ import java.util.List;
 @Autonomous(name = "sample+ auto", group = ".")
 public class SamplePlusAuto extends LinearOpMode {
 
-
-    public static double TURN_KP = 1.4, TURN_KD = 0.0, TURN_KF = 0.0;
-    public static double EXTENSION_KP = 1.4, EXTENSION_KD = 0.0, EXTENSION_KF = 0.0;
-    public static double DISTANCE = 600;
+    public static double DISTANCE = 500.0, ANGLE = 40.0;
     PIDFController turnPIDF, extensionPIDF;
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
@@ -217,7 +214,7 @@ public class SamplePlusAuto extends LinearOpMode {
                     if (Pivot.angle >= 90) {
                         extension.goHighBasket();
                     }
-                } else if (pickupTime >= 1.4) {
+                } else if (pickupTime >= 1.7) {
                     extension.goHighBasket();
                     setPathState(SamplePlusAuto.PathState.PickupToBasket);
                     if (scoredSamples == 1) {
@@ -263,29 +260,33 @@ public class SamplePlusAuto extends LinearOpMode {
 
             case Collecting:
 
-                if (pathTimer.getElapsedTimeSeconds() >= 0.3) {
+                if (pathTimer.getElapsedTimeSeconds() >= 0.1) {
                     org.opencv.core.Point sample = camera.getPosition();
                     double distanceFromCenter = sample.x * sample.x + sample.y * sample.y;
                     if (distanceFromCenter <= 0.1 && (sample.x != 0.0 && sample.y != 0.0 && camera.getOrientation() != 0.0)) {
                         gripper.turn(camera.getOrientation());
                         follower.holdPoint(follower.getPose());
+                        extension.setTarget(extension.getPosition());
 //                        camera.stopReading();
                         setPathState(PathState.Pickup);
-                        camera.clearData();
                     } else {
-//                        telemetry.addData("reading", camera.reading);
-//                        telemetry.addData("orientation", camera.getOrientation());
-//                        telemetry.addData("point", sample.toString());
-//                        telemetry.update();
+                        telemetry.addData("reading", camera.reading);
+                        telemetry.addData("orientation", camera.getOrientation());
+                        telemetry.addData("point", sample.toString());
+                        telemetry.update();
 
-                        double angleTarget = turnPIDF.calculate(0, Math.toRadians(sample.x * 25.0));
-                        double extensionTarget = extension.getPosition() + extensionPIDF.calculate(extension.getPosition(), extension.getPosition() + sample.y * DISTANCE);
+//                        double angleTarget = turnPIDF.calculate(0, Math.toRadians(sample.x * 15.0));
+//                        int extensionTarget = ()extensionPIDF.calculate(extension.getPosition(), extension.getPosition() + sample.y * DISTANCE);
+
+                        double angleTarget = Math.toRadians(ANGLE) * sample.x;
+                        double extensionTarget = extension.getPosition() + sample.y * DISTANCE;
 
                         follower.turn(angleTarget, true);
                         extension.setTarget((int)extensionTarget);
+
+                        setPathState(PathState.Collecting);
                     }
                 }
-
                 break;
 //            case Park:
 //                if(!follower.isBusy()) {
@@ -315,9 +316,6 @@ public class SamplePlusAuto extends LinearOpMode {
         pathTimer = new Timer();
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
-
-        turnPIDF = new PIDFController(TURN_KP, 0D, TURN_KD, TURN_KF);
-        extensionPIDF = new PIDFController(EXTENSION_KP, 0D, EXTENSION_KD, EXTENSION_KF);
 
 //        follower = new Follower(hardwareMap, FConstants.class, LConstants.class);
 
