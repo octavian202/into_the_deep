@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 public class Gripper extends SubsystemBase {
 
     public static double OPEN = 0.43, CLOSED = 0.66;
-    public static double LEFT = 0.96, RIGHT = 0.29;
+    public static double LEFT = 0.935, RIGHT = 0.27;
             ;
     Servo servo, roll;
     public boolean isOpen = false;

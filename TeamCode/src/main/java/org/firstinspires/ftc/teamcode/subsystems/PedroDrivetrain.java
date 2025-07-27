@@ -22,9 +22,7 @@ public class PedroDrivetrain extends SubsystemBase {
         follower.startTeleopDrive();
     }
 
-    public void revert() {
-        reverted = -reverted;
-    }
+
 
     @Override
     public void periodic() {
@@ -34,7 +32,9 @@ public class PedroDrivetrain extends SubsystemBase {
     public void drive(double x, double y, double rx) {
         follower.setTeleOpMovementVectors(y * reverted, -x * reverted, -rx);
     }
-
+    public void revert() {
+        reverted = -reverted;
+    }
     public void auto() {
         follower.breakFollowing();
         follower.resumePathFollowing();

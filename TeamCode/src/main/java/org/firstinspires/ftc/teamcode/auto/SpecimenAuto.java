@@ -49,9 +49,7 @@ public class SpecimenAuto extends LinearOpMode {
     private final Pose startPose = new Pose(8.5, 65, Math.toRadians(180));
 
     private final Pose scorePose = new Pose(38.7, 65, Math.toRadians(180));
-    private final Pose scoreControlPose1 = new Pose(20, 60, Math.toRadians(180));
-    private final Pose scoreControlPose2 = new Pose(38, 65, Math.toRadians(180));
-
+    private final Pose scoreControlPose = new Pose(20, 60);
     private final Pose pickupPose = new Pose(18, 33, Math.toRadians(180));
     private final Pose pickupControlPose1 = new Pose(30, 65);
     private final Pose pickupControlPose2 = new Pose(32, 31);
@@ -99,24 +97,24 @@ public class SpecimenAuto extends LinearOpMode {
                 .build();
 
         scorePickup = follower.pathBuilder()
-                .addPath(new BezierCurve(new Point(dropSamplePose3), new Point(scoreControlPose1), new Point(scorePose)))
+                .addPath(new BezierCurve(new Point(dropSamplePose3), new Point(scoreControlPose), new Point(scorePose)))
                 .setZeroPowerAccelerationMultiplier(3.0)
                 .setConstantHeadingInterpolation(Math.toRadians(180))
                 .build();
 
 
         scorePickup1 = follower.pathBuilder()
-                .addPath(new BezierCurve(new Point(pickupPose), new Point(scoreControlPose1), new Point(scorePose)))
+                .addPath(new BezierCurve(new Point(pickupPose), new Point(scoreControlPose), new Point(scorePose)))
                 .setZeroPowerAccelerationMultiplier(3.0)
                 .setConstantHeadingInterpolation(Math.toRadians(180))
                 .build();
         scorePickup2 = follower.pathBuilder()
-                .addPath(new BezierCurve(new Point(pickupPose), new Point(scoreControlPose1), new Point(scorePose)))
+                .addPath(new BezierCurve(new Point(pickupPose), new Point(scoreControlPose), new Point(scorePose)))
                 .setZeroPowerAccelerationMultiplier(3.0)
                 .setConstantHeadingInterpolation(Math.toRadians(180))
                 .build();
         scorePickup3 = follower.pathBuilder()
-                .addPath(new BezierCurve(new Point(pickupPose), new Point(scoreControlPose1), new Point(scorePose)))
+                .addPath(new BezierCurve(new Point(pickupPose), new Point(scoreControlPose), new Point(scorePose)))
                 .setZeroPowerAccelerationMultiplier(3.0)
                 .setConstantHeadingInterpolation(Math.toRadians(180))
                 .build();
@@ -166,20 +164,16 @@ public class SpecimenAuto extends LinearOpMode {
                 break;
             case Scoring:
 
-                // e facut deja
-
                 gripper.open();
                 extension.goDown();
 
                 scoredSpecimens++;
 
                 if (scoredSpecimens == 1) {
-//                    pivot.goDown();
                     extension.goDown();
                     follower.followPath(collectSample1, false);
                     setPathState(PathState.CollectSample);
                 } else if (scoredSpecimens < 5) {
-//                    pivot.goDown();
                     extension.goDown();
 
                     if (scoredSpecimens == 2) {
@@ -196,10 +190,6 @@ public class SpecimenAuto extends LinearOpMode {
                     setPathState(PathState.Park);
                 }
 
-//                if (pathTimer.getElapsedTimeSeconds() <= 0.1) {
-//                    gripper.open();
-//                } else if (pathTimer.getElapsedTimeSeconds() >= 0.1) {
-//                }
                 break;
             case ScoreToPickup:
                 if (pathTimer.getElapsedTimeSeconds() >= 0.2) {
@@ -228,29 +218,6 @@ public class SpecimenAuto extends LinearOpMode {
                 }
 
                 break;
-
-//                double pickupTime = pathTimer.getElapsedTimeSeconds();
-//                double waitTime = 0.2;
-//                if (pickupTime >= waitTime && pickupTime <= waitTime + 0.3) {
-//                    extension.setTarget(Extension.LOWER_LIMIT + 4000);
-//                } else if (waitTime + 0.8 < pickupTime && pickupTime <= waitTime + 0.9) {
-//                    gripper.close();
-//                } else if (pickupTime > waitTime + 1.0) {
-//
-//                    pivot.goUp();
-//
-//                    if (scoredSpecimens == 1) {
-//                        follower.followPath(scorePickup, true);
-//                    } else if (scoredSpecimens == 2) {
-//                        follower.followPath(scorePickup1, true);
-//                    } else if (scoredSpecimens == 3) {
-//                        follower.followPath(scorePickup2, true);
-//                    } else if (scoredSpecimens == 4) {
-//                        follower.followPath(scorePickup3, true);
-//                    }
-//                    setPathState(PathState.PickupToScore);
-//                }
-//                break;
             case PickupToScore:
                 if (Pivot.angle >= 60) {
                     extension.goHighChamber();

@@ -18,8 +18,5 @@ public class PickUpSample extends SequentialCommandGroup {
                 new WaitCommand(200),
                 new InstantCommand(arm::intakeOverSubmersible, arm)
         );
-
-//        addRequirements(arm, gripper);
     }
-
 }

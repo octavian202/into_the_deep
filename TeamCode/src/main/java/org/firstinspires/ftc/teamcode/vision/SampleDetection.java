@@ -92,7 +92,7 @@ public class SampleDetection implements VisionProcessor {
                 samplePoint.set(new double[]{normX, normY});
 
             } else {
-                detectedAngle = -90;
+                detectedAngle = -90.0;
             }
 
             // Return processed frame for viewing
@@ -108,7 +108,7 @@ public class SampleDetection implements VisionProcessor {
     public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight, float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {}
 
     public double getDetectedAngle() {
-        return detectedAngle - 90;
+        return detectedAngle - 90.0;
     }
 
     public Point getSampleCenter() {

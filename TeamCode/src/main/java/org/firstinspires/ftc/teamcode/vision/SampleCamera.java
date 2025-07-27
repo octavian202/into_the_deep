@@ -14,8 +14,6 @@ import org.opencv.core.Point;
 
 @Config
 public class SampleCamera extends SubsystemBase {
-    public static double COOLDOWN = 0.05;
-
     SampleDetection sampleDetection;
     VisionPortal visionPortal;
 
@@ -23,7 +21,6 @@ public class SampleCamera extends SubsystemBase {
     private double orientation = 0d;
 
     Timer timer = new Timer();
-    public boolean reading = false;
 
     public SampleCamera(HardwareMap hardwareMap) {
 
@@ -35,36 +32,25 @@ public class SampleCamera extends SubsystemBase {
                 .setCameraResolution(new Size(1280, 720))
                 .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
                 .build();
-
-        resumeReading();
-//        reading = true;
     }
 
     @Override
     public void periodic() {
-        if (reading) {
-            timer.resetTimer();
-            orientation = sampleDetection.getDetectedAngle();
-            center = sampleDetection.getSampleCenter();
 
-            center.y = Math.max(center.y, -1.0);
-            center.y = Math.min(center.y, 1.0);
-            center.x = Math.max(center.x, -1.0);
-            center.x = Math.min(center.x, 1.0);
-        }
+        orientation = sampleDetection.getDetectedAngle();
+
+        Point newCenter = sampleDetection.getSampleCenter();
+        newCenter.y = Math.max(newCenter.y, -1.0);
+        newCenter.y = Math.min(newCenter.y, 1.0);
+        newCenter.x = Math.max(newCenter.x, -1.0);
+        newCenter.x = Math.min(newCenter.x, 1.0);
+
+        center = new Point(newCenter.x, newCenter.y);
     }
 
     public void clearData() {
         orientation = 0d;
         center = new Point(0d, 0d);
-    }
-
-    public void resumeReading() {
-        reading = true;
-    }
-
-    public void stopReading() {
-        reading = false;
     }
 
     public double getOrientation() {

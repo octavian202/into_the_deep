@@ -5,7 +5,6 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.command.CommandScheduler;
 import com.arcrobotics.ftclib.command.button.Trigger;
-import com.arcrobotics.ftclib.controller.PIDController;
 import com.arcrobotics.ftclib.controller.PIDFController;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.localization.Pose;
@@ -17,7 +16,6 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.commands.GoToDefaultPosition;
 import org.firstinspires.ftc.teamcode.commands.PickUpSample;
 import org.firstinspires.ftc.teamcode.pedroPathing.constants.*;
@@ -28,17 +26,14 @@ import org.firstinspires.ftc.teamcode.subsystems.Pivot;
 import org.firstinspires.ftc.teamcode.vision.SampleCamera;
 
 import java.util.List;
-//import pedroPathing.constants.LConstants;
 
 @Config
 @Autonomous(name = "camera auto test", group = "test")
 public class CameraAutoTest extends LinearOpMode {
-    public static double DISTANCE = 500, ANGLE = 40.0;
-    PIDFController turnPIDF, extensionPIDF;
+    public static double DISTANCE = 3600, POSITION = 1.8, ZERO_POWER_ACCELERATION = 2.0;
 
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
-    private Telemetry telemetryA;
 
     private PathState pathState;
     private Extension extension;
@@ -47,15 +42,8 @@ public class CameraAutoTest extends LinearOpMode {
     private Gripper gripper;
     private SampleCamera camera;
     private GoToDefaultPosition goToDefaultPosition;
-    //    private AutoArmControl autoArmControl;
-    private PickUpSample pickUpSample;
-    private int scoredSamples = 0;
 
-//      Pedro uses 0 - 144 for x and y, with 0, 0 being on the bottom left.
-//      (For Into the Deep, this would be Blue Observation Zone (0,0) to Red Observation Zone (144,144).)
-    // This visualizer is very easy to use to find and create paths/pathchains/poses: <https://pedro-path-generator.vercel.app/>
-
-
+    private PathChain adjustmentPath;
 
     public void autonomousPathUpdate() {
         switch (pathState) {
@@ -76,32 +64,12 @@ public class CameraAutoTest extends LinearOpMode {
                     }
                 }
                 break;
-            case Pickup:
-                double pickupTime = pathTimer.getElapsedTimeSeconds();
-                if (pickupTime >= 0.2 && pickupTime <= 0.3) { // abia a ajuns la sample
-                    pickUpSample.schedule();
-                } else if (0.8 <= pickupTime && pickupTime < 0.9) {
-                    extension.goDown();
-                } else if (1.0 <= pickupTime && pickupTime < 1.3) {
-                    pivot.goUp();
-                    if (Pivot.angle >= 80) {
-                        extension.goHighBasket();
-                    }
-                } else if (pickupTime >= 1.4) {
-                    extension.goHighBasket();
-                    setPathState(PathState.Done);
-
-                }
-                break;
-
-
             case ScoreToSubmersible:
                 if (Pivot.angle <= 40) {
                     arm.intakeSubmersibleAuto();
                     extension.setTarget(Extension.LOWER_LIMIT + 8000);
                     gripper.turn(0);
                     gripper.open();
-                    camera.resumeReading();
                 }
 
                 if(!extension.isBusy() && Pivot.angle <= 20) {
@@ -112,39 +80,39 @@ public class CameraAutoTest extends LinearOpMode {
 
             case Collecting:
 
-                if (pathTimer.getElapsedTimeSeconds() >= 0.1) {
-                    org.opencv.core.Point sample = camera.getPosition();
-                    double distanceFromCenter = sample.x * sample.x + sample.y * sample.y;
-                    if (distanceFromCenter <= 0.1 && (sample.x != 0.0 && sample.y != 0.0 && camera.getOrientation() != 0.0)) {
-//                        gripper.turn(camera.getOrientation());
-                        follower.holdPoint(follower.getPose());
-                        extension.setTarget(extension.getPosition());
-//                        camera.stopReading();
-//                        setPathState(PathState.Pickup);
-                    } else {
-                        telemetry.addData("reading", camera.reading);
-                        telemetry.addData("orientation", camera.getOrientation());
-                        telemetry.addData("point", sample.toString());
-                        telemetry.update();
+                org.opencv.core.Point sample = camera.getPosition();
+                double distanceFromCenter = sample.x * sample.x + sample.y * sample.y;
 
-//                        double angleTarget = turnPIDF.calculate(0, Math.toRadians(sample.x * 15.0));
-//                        int extensionTarget = ()extensionPIDF.calculate(extension.getPosition(), extension.getPosition() + sample.y * DISTANCE);
+                if (distanceFromCenter <= 0.15 && (sample.x != 0.0 && sample.y != 0.0 && camera.getOrientation() != 0.0)) {
+//                    gripper.turn(camera.getOrientation());
 
-                        double angleTarget = Math.toRadians(ANGLE) * sample.x;
-                        double extensionTarget = extension.getPosition() + sample.y * DISTANCE;
+                    follower.holdPoint(follower.getPose());
+                    extension.setTarget(extension.getPosition());
 
-                        follower.turn(angleTarget, true);
-                        extension.setTarget((int)extensionTarget);
+//                    setPathState(SamplePlusAuto.PathState.Pickup);
+                    break;
+                } else if (pathTimer.getElapsedTimeSeconds() >= 0.3) {
 
-                        setPathState(PathState.Collecting);
-                    }
+                    telemetry.addData("orientation", camera.getOrientation());
+                    telemetry.addData("pos", camera.getPosition().toString());
+                    telemetry.update();
+
+                    double xAdjustment = sample.x * POSITION;
+                    follower.holdPoint(new Pose(follower.getPose().getX() + xAdjustment, follower.getPose().getY(), Math.toRadians(-90)));
+                    adjustmentPath = follower.pathBuilder()
+                            .addBezierLine(new Point(follower.getPose()), new Point(follower.getPose().getX() + xAdjustment, follower.getPose().getY()))
+                            .setConstantHeadingInterpolation(Math.toRadians(-90))
+                            .setZeroPowerAccelerationMultiplier(ZERO_POWER_ACCELERATION)
+                            .build();
+
+                    double extensionTarget = extension.getPosition() + sample.y * DISTANCE;
+
+                    follower.followPath(adjustmentPath, true);
+                    extension.setTarget((int)extensionTarget);
+
+                    setPathState(PathState.Collecting);
                 }
                 break;
-//            case Park:
-//                if(!follower.isBusy()) {
-//                    setPathState(PathState.Done);
-//                }
-//                break;
         }
     }
 
@@ -163,17 +131,15 @@ public class CameraAutoTest extends LinearOpMode {
 
         CommandScheduler.getInstance().reset();
 
-        telemetryA = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
+        telemetry = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
 
         pathTimer = new Timer();
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
 
-//        follower = new Follower(hardwareMap, FConstants.class, LConstants.class);
-
         Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);
-        follower.setStartingPose(new Pose());
+        follower.setStartingPose(new Pose(0, 0, Math.toRadians(-90)));
 
         camera = new SampleCamera(hardwareMap);
 
@@ -189,24 +155,22 @@ public class CameraAutoTest extends LinearOpMode {
         extension.goHighChamber();
 
         goToDefaultPosition = new GoToDefaultPosition(pivot);
-//        autoArmControl = new AutoArmControl(arm, gripper, extension);
-        pickUpSample = new PickUpSample(arm, gripper);
 
         Trigger pivotIsUp = new Trigger(() -> pivot.getAngle() >= 45);
         Trigger pivotIsDown = new Trigger(() -> pivot.getAngle() < 45);
 
-//        pivotIsUp.whenActive(autoArmControl);
         pivotIsUp.whenActive(() -> gripper.turn(90));
         pivotIsUp.and(new Trigger(() -> extension.isBusy())).whenActive(arm::idle);
         pivotIsUp.and(new Trigger(() -> !extension.isBusy())).whenActive(arm::outtakeSample);
 
         waitForStart();
 
+
         goToDefaultPosition.schedule();
         PathChain path = follower.pathBuilder()
-                        .addBezierLine(new Point(new Pose()), new Point( new Pose(1, 1, 0)))
-                .setConstantHeadingInterpolation(0)
-                                .build();
+                .addBezierLine(new Point(follower.getPose()), new Point( new Pose(1, 0, Math.toRadians(-90))))
+                .setConstantHeadingInterpolation(Math.toRadians(-90))
+                .build();
 
 
         follower.followPath(path, false);
@@ -223,16 +187,6 @@ public class CameraAutoTest extends LinearOpMode {
             follower.update();
             autonomousPathUpdate();
 
-            follower.telemetryDebug(telemetryA);
-
-//            telemetry.addData("path state", pathState);
-//            telemetry.addData("x", follower.getPose().getX());
-//            telemetry.addData("y", follower.getPose().getY());
-//            telemetry.addData("heading", follower.getPose().getHeading());
-//            telemetry.addData("extension", extension.getPosition());
-//            telemetry.addData("target", extension.getTarget());
-//            telemetry.addData("busy", extension.isBusy());
-//            telemetry.update();
         }
     }
 
